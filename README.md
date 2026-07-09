@@ -2,13 +2,13 @@
 
 
 Este projeto consiste em um sistema de validação de processos para
-a PROGEP-UFPB. O objetivo principal é analisar os pedidos de
+a **PROGEP-UFPB**. O objetivo principal é analisar os pedidos de
 afastamento de servidores, garantindo a conformidade com os prazos
 de prestação de contas de afastamentos anteriores.
 
 ---
 
-## O Problema de Negócio (Regras de Auditoria)
+## Regras de Auditoria
 
 Quando um servidor público solicita um afastamento para fins de capacitação ou
 estudo, a auditoria precisa verificar se ele cumpriu com suas obrigações
