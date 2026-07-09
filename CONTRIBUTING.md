@@ -4,33 +4,75 @@ Este documento define o fluxo de trabalho, os padrões de código e o design do
 projeto para ajudar todos os contribuidores a realizar alterações consistentes e
 seguras no sistema de auditoria da universidade.
 
-1. Fluxo de Trabalho do Git (Fork e Pull Request)
+## Pré-requisitos do Ambiente
+
+Como não mantemos o Maven Wrapper (`mvnw`) rastreado no repositório, você precisará preparar seu ambiente local antes de começar.
+
+Certifique-se de ter o Java Development Kit (JDK) 21 e o Maven instalados no seu sistema operacional.
+- No Ubuntu/Debian: `sudo apt install openjdk-21-jdk maven`
+- No macOS (via Homebrew): `brew install openjdk@21 maven`
+- No Windows: Instale via gerenciador de pacotes (`winget install Eclipse.Temurin.21.JDK` e `winget install Apache.Maven`) ou faça o download manual.
+
+Utilizamos o Docker para subir o banco de dados PostgreSQL localmente de forma idêntica ao ambiente de produção.
+- Instale o **Docker Desktop** (Windows/macOS) ou o **Docker Engine** (Linux).
+
+## Inicializando o Projeto
+
+Após clonar o seu fork do repositório, execute os passos abaixo na raiz do projeto:
+
+### Passo 1: Gerar o seu Maven Wrapper local (Opcional)
+Se preferir usar o wrapper (`mvnw`) localmente sem precisar digitar a palavra `mvn` global, gere-o na sua máquina (ele será ignorado pelo Git automaticamente):
+
+```bash
+mvn wrapper:wrapper
+```
+*A partir daqui, você pode usar ./mvnw (Linux/macOS) ou mvnw.cmd (Windows) em vez de mvn.*
+
+**Passo 2:** Subir o Banco de Dados (PostgreSQL)
+
+Inicie o container do banco de dados em segundo plano:
+
+```bash
+docker compose up -d
+```
+Isso criará uma instância do PostgreSQL configurada na porta 5432 com as credenciais especificadas no arquivo docker-compose.yml.
+
+**Passo 3:** Executar as Migrações e Compilar o Projeto
+
+O Flyway aplicará automaticamente todos os scripts de criação de tabelas localizados em src/main/resources/db/migration/ assim que o projeto for compilado ou iniciado:
+
+```bash
+mvn clean compile
+```
+
+
+## Fluxo de Trabalho do Git (Fork e Pull Request)
 
 Utilizamos o modelo de Fork e Pull Request para garantir que todo código seja
 revisado antes de ser integrado ao repositório principal. Siga estes passos para
 qualquer contribuição:
 
-Passo 1: Fazer o Fork do Repositório
+**Passo 1:** Fazer o Fork do Repositório
 
 Acesse a página do repositório principal da organização no GitHub e clique no
 botão Fork (no canto superior direito) para criar uma cópia dele na sua conta
 pessoal.
 
-Passo 2: Clonar o seu Fork
+**Passo 2:** Clonar o seu Fork
 
 Clone o seu fork pessoal localmente em seu computador:
 
 git clone https://github.com/USUARIO/onerous.git
 cd auditing-system
 
-Passo 3: Vincular ao Repositório Original
+**Passo 3:** Vincular ao Repositório Original
 
 Para manter seu código local atualizado com o repositório oficial, adicione o
 repositório da organização como um remoto chamado upstream:
 
 git remote add upstream https://github.com/proj_belarmino/onerous.git
 
-Passo 4: Criar uma Branch para a sua Tarefa
+**Passo 4:** Criar uma Branch para a sua Tarefa
 
 Sempre trabalhe em uma branch separada. Nunca faça commits diretamente na branch master.
 Use nomes curtos e descritivos (e.g, unit-tests, api-refactor):
@@ -38,7 +80,7 @@ Use nomes curtos e descritivos (e.g, unit-tests, api-refactor):
 git checkout -b feature/nome-da-sua-tarefa
 (ou fix/nome-da-sua-tarefa, ou refactor/nome-da-sua-tarefa)
 
-Passo 5: Desenvolver e Commitar
+**Passo 5:** Desenvolver e Commitar
 
 Faça commits pequenos e focados. Escreva mensagens de commit claras e diretas em
 português:
@@ -46,7 +88,7 @@ português:
 git add .
 git commit -m "feat: adiciona validacao de formato de arquivo para documentos"
 
-Passo 6: Sincronizar com o Repositório Original
+**Passo 6:** Sincronizar com o Repositório Original
 
 Antes de enviar suas alterações, atualize seu código com o repositório principal
 para evitar conflitos:
@@ -58,7 +100,7 @@ git merge master
 
 Se houver conflitos que você não saiba como resolver, peça ajuda antes de prosseguir.
 
-Passo 7: Enviar (Push) e Abrir um Pull Request (PR)
+**Passo 7:** Enviar (Push) e Abrir um Pull Request (PR)
 
 Envie sua branch para o seu fork no GitHub:
 
@@ -71,7 +113,7 @@ descreva brevemente o que foi feito e envie.
 Obs: Não realize o merge do seu próprio Pull Request.
 Vou olhar o código e fazer a integração final.
 
-2. Princípios de Design
+## Princípios de Design
 
   - Simulação de API (Mock): Como ainda não temos acesso à API oficial da
     universidade, criaremos classes de simulação estruturadas (mocks) usando
@@ -80,16 +122,20 @@ Vou olhar o código e fazer a integração final.
     ChronoUnit) para garantir a precisão nas regras de prazo de 15 dias,
     evitando cálculos manuais com milissegundos.
 
-3. Tecnologias e Dependências
+## Tecnologias e Dependências
 
-| Camada           | Ferramenta         | Propósito                                          |
-| ---------------- | ------------------ | -------------------------------------------------- |
-| Linguagem        | Java 17 (JDK 17)   | Linguagem de programação principal                 |
-| Sistema de Build | Maven (via `mvnw`) | Compilação, empacotamento e gestão de dependências |
-| Framework        | Spring Boot        | Gerenciamento da API.                              |
-| Testes           | JUnit 5 (Jupiter)  | Criação e execução de testes unitários             |
+| Camada               | Ferramenta         | Propósito                                          |
+| -------------------- | ------------------ | -------------------------------------------------- |
+| **Linguagem**        | Java 21 (JDK 21)   | Linguagem de programação principal                 |
+| **Banco de Dados**   | PostgreSQL         | Persistência de informações                        |
+| **Persistência**     | Spring Data JPA    | Abstração do acesso ao banco de dados.             |
+| **Infraestrutura**   | Docker Compose     | Padronização do ambiente local de desenvolvimento  |
+| **Migrações**        | Flyway             | Controle de versão do esquema do banco de dados    |
+| **Sistema de Build** | Maven (via `mvnw`) | Compilação, empacotamento e gestão de dependências |
+| **Framework**        | Spring Boot        | Gerenciamento da API.                              |
+| **Testes**           | JUnit (Jupiter)    | Criação e execução de testes unitários             |
 
-4. Estrutura do Projeto
+##  Estrutura do Projeto
 
 O código do projeto segue a estrutura padrão do Maven. Posicione suas classes
 nos pacotes correspondentes:
@@ -106,7 +152,7 @@ src/
       br/ufpb/onerous/
         service/       # Testes unitários focados na validação das regras de negócio
 
-5. Convenções de Nomenclatura e Estilo
+## Convenções de Nomenclatura e Estilo
 
 Todos os identificadores de código (classes, métodos, variáveis e comentários
 nos arquivos-fonte) devem ser escritos em inglês.
