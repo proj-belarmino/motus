@@ -42,7 +42,7 @@ idêntica ao ambiente de produção.
 Após clonar o seu fork do repositório, execute os passos abaixo na raiz do
 projeto:
 
-### Passo 1: Gerar o seu Maven Wrapper local (Opcional)
+### Passo 1: Gerar o seu Maven Wrapper local
 Se preferir usar o wrapper (mvnw) localmente sem precisar digitar a palavra
 mvn global, gere-o na sua máquina (ele já está configurado para ser ignorado
 pelo Git):
