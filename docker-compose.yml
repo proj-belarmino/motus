@@ -12,5 +12,12 @@ services:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
+  wiremock:
+    image: wiremock/wiremock:3.3.1
+    container_name: uni-api-mock
+    ports:
+      - "8081:8080"
+    volumes:
+      - ./wiremock:/home/wiremock
 volumes:
   postgres_data:
