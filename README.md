@@ -8,9 +8,6 @@ download de arquivos independentemente do seu tamanho.
 ---
 
 ## Funcionalidades Principais
-
-### Gerenciamento de Bibliotecas
-
 O sistema permite o cadastro de uma ou mais bibliotecas locais contendo
 arquivos de mídia.
 Ao adicionar uma biblioteca, o serviço realiza uma varredura recursiva do
@@ -75,7 +72,7 @@ Instruções rápidas para inicialização local da aplicação e do banco:
   ```bash
   docker compose up -d
   ```
-
+  
 * **Compilar o projeto e executar as migrações:**
   ```bash
   mvn clean compile
