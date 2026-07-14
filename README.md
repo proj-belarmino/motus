@@ -1,59 +1,69 @@
-# Auditing System
+# Media Streaming Server
 
-
-Este projeto consiste em um sistema de validação de processos para
-a **PROGEP-UFPB**. O objetivo principal é analisar os pedidos de
-afastamento de servidores, garantindo a conformidade com os prazos
-de prestação de contas de afastamentos anteriores.
-
----
-
-## Regras de Auditoria
-
-Quando um servidor público solicita um afastamento para fins de capacitação ou
-estudo, a auditoria precisa verificar se ele cumpriu com suas obrigações
-administrativas em afastamentos passados.
-
-### Bloqueio de Novos Pedidos
-* **Prazo:** Assim que o servidor retorna de um período de afastamento,
-  ele tem um prazo de N dias corridos para abrir um processo; para esta
-  aplicação, utilizaremos um default de 15.
-  administrativo de prestação de contas.
-* **Consequência:** Se o prazo de N dias expirar sem que a prestação de
-  contas seja iniciada, o servidor entra em situação de pendência e fica
-  impedido de abrir novos processos de afastamento até regularizar sua
-  situação.
-* **Validação:** Ao receber um novo pedido de afastamento, o sistema deve
-  varrer o histórico do servidor. Se houver qualquer afastamento anterior
-  finalizado há mais de N dias que não possua um processo de prestação de
-  contas correspondente, o novo pedido deve ser rejeitado.
-
-### Validação de Documentos Anexados
-Além de verificar os prazos das datas, o sistema realiza uma validação básica
-e superficial nos documentos anexados ao novo pedido de afastamento:
-* **Existência:** O pedido deve conter pelo menos um documento anexado.
-* **Formato Geral:** Devemos validar a extensão do arquivo. Apenas formatos
-  comuns e seguros são aceitos (por exemplo, `.pdf` ou `.png`). Arquivos de
-  outros formatos ou sem extensão identificável devem fazer com que o
-  processo seja rejeitado.
-
-Há a perspectiva de validação com modelos próprios de machine learning,
-na eventualidade de acesso a dados históricos suficientemente numerosos.
+Este projeto consiste em um web serviço de streaming de mídia de baixa latência.
+O objetivo principal é organizar bibliotecas de mídia e servir arquivos
+remotamente, oferecendo reprodução de vídeos, músicas e imagens, além de
+download de arquivos independentemente do seu tamanho.
 
 ---
 
-## Glossário de Termos
+## Funcionalidades Principais
 
-Para garantir que o código seja legível e siga um padrão único,
-utilizaremos os seguintes termos em inglês no desenvolvimento:
+### Gerenciamento de Bibliotecas
 
-| Termo em PT | Termo em EN (Código) | Representação no Sistema |
-| :--- | :--- | :--- |
-| **Servidor** | `Servant` | Identificado pelo ID único `servantId`. |
-| **Processo** | `Process` | Contém datas e lista de documentos. |
-| **Afastamento** | `LEAVE` | Tipo `ProcessType.LEAVE`. |
-| **Prestação** | `ACCOUNTABILITY` | Tipo `ProcessType.ACCOUNTABILITY`. |
-| **Documento** | `Document` | Representa anexos (nome e extensão). |
+O sistema permite o cadastro de uma ou mais bibliotecas locais contendo
+arquivos de mídia.
+Ao adicionar uma biblioteca, o serviço realiza uma varredura recursiva do
+diretório para identificar novos arquivos e registrar suas informações.
+
+* **Detecção automática:** Novos arquivos podem ser detectados automaticamente
+  por monitoramento do sistema de arquivos.
+* **Indexação:** São armazenados metadados como duração, resolução, codec,
+  tamanho e localização do arquivo.
+* **Atualização:** Arquivos removidos ou modificados são sincronizados com o
+  banco de dados.
+
+### Reprodução de Mídia
+
+Os arquivos podem ser reproduzidos diretamente pela aplicação através de
+streaming HTTP.
+
+* **Streaming:** Envio contínuo do conteúdo para reprodução sem necessidade
+  de download completo.
+* **Range Requests:** Permite avançar ou retroceder na reprodução sem
+  reiniciar o envio do arquivo.
+* **Transcodificação:** Quando necessário, vídeos podem ser convertidos para
+  formatos compatíveis durante a reprodução.
+
+
+### Metadados
+
+Após a indexação, o sistema pode complementar automaticamente as informações
+da mídia utilizando serviços externos.
+
+* **Filmes e Séries:** Título, sinopse, elenco, gênero, ano e pôster.
+* **Músicas:** Álbum, artista e capa.
+* **Cache:** Os metadados obtidos são armazenados localmente para evitar
+  consultas repetidas.
+
+### Miniaturas
+
+O sistema gera miniaturas automaticamente para facilitar a navegação pela
+biblioteca.
+
+* **Vídeos:** Captura de um quadro representativo.
+* **Imagens:** Redimensionamento para visualização rápida.
+* **Fila de processamento:** A geração ocorre em segundo plano para não
+  bloquear outras operações.
+
+### Busca
+
+Os usuários podem localizar rapidamente qualquer conteúdo da biblioteca.
+
+* Busca por título.
+* Busca por gênero.
+* Busca por ator ou diretor.
+* Filtros por resolução, ano, duração e tipo de mídia.
 
 ---
 
@@ -61,15 +71,22 @@ utilizaremos os seguintes termos em inglês no desenvolvimento:
 
 Instruções rápidas para inicialização local da aplicação e do banco:
 
-* **Subir o banco de dados local (Docker):**
+* **Subir os serviços (Docker):**
   ```bash
   docker compose up -d
   ```
-* **Compilar o projeto e rodar as migrações (Flyway):**
+
+* **Compilar o projeto e executar as migrações:**
   ```bash
   mvn clean compile
   ```
+
 * **Executar os testes unitários:**
   ```bash
   mvn test
- 
+  ```
+
+* **Iniciar a aplicação:**
+  ```bash
+  mvn spring-boot:run
+  ```

@@ -88,8 +88,8 @@ conta pessoal.
 Clone o seu fork pessoal localmente em seu computador:
 
 ```bash
-git clone https://github.com/USUARIO/onerous.git
-cd auditing-system
+git clone https://github.com/USUARIO/motus.git
+cd motus
 ```
 
 ### Passo 3: Vincular ao Repositório Original
@@ -97,7 +97,7 @@ Para manter seu código local atualizado com o repositório oficial, adicione o
 repositório da organização como um remoto chamado `upstream`:
 
 ```bash
-git remote add upstream https://github.com/proj_belarmino/onerous.git
+git remote add upstream https://github.com/proj_belarmino/motus.git
 ```
 
 ### Passo 4: Criar uma Branch para a sua Tarefa
@@ -108,7 +108,7 @@ branch `master`. Use nomes curtos e descritivos:
 git checkout -b feature/nome-da-sua-tarefa
 ```
 *(Você também pode utilizar prefixos como `fix/nome-da-tarefa` ou
-`refactor/nome-da-tarefa`, dependendo da alteração).*
+`refactor/nome-da-tarefa`, dependendo da natureza da alteração).*
 
 ### Passo 5: Desenvolver e Commitar
 Faça commits pequenos e focados. Escreva mensagens de commit claras e diretas
@@ -143,35 +143,101 @@ Vá até a página do repositório original no GitHub. O site exibirá um aviso
 sugerindo a criação de um Pull Request. Clique em **Compare & pull request**,
 descreva brevemente o que foi feito e envie.
 
-> **OBS:** Não realize o merge do seu próprio Pull Request. A equipe revisará o
+> **Observação:** Não realize o merge do seu próprio Pull Request. A equipe revisará o
 > código antes de realizar a integração final.
 
 ---
 
 ## Princípios de Design
 
-*   **Simulação de API (Mock):** Como ainda não temos acesso à API oficial da
-    universidade, criaremos classes de simulação estruturadas (mocks) usando
-    bancos de dados em memória e coleções padrão do Java para simular a ingestão
-    e retorno de dados.
-*   **Manipulação Segura de Datas:** Use a API `java.time` (como `LocalDate` e
-    `ChronoUnit`) para garantir a precisão nas regras de prazo de 15 dias,
-    evitando cálculos manuais com milissegundos.
+* **Separation of Concerns (SoC):** 
+  Não devemos poluir módulos de um domínio da aplicação (e.g., API) com lógica de outro.
+  Ou seja, separe bem a lógica para não prejudicar a modularidade e facilidade de manutenção.
+  Caso precise fazer uma operação de arquivos, utilize a abstração de gerenciamento de arquivos,
+  ou crie uma nova abstração que o faça, caso ainda não exista.
 
----
+  **Por exemplo,**
+  ```java
+    class BankAccount {
+      private double balance;
+
+      void deposit() {
+          Scanner sc = new Scanner(System.in);
+
+          System.out.print("Amount: ");
+          double amount = sc.nextDouble();
+
+          balance += amount;
+      }
+    }
+  ```
+  **Poderia ser re-escrito como,**
+  ```java
+    class BankAccount {
+      private double balance;
+
+      void deposit(double amount) {
+        balance += amount;
+      }
+    }
+
+    class InputReader {
+      private Scanner scanner;
+
+      // definir construtor, etc...
+
+      double readAmount() {
+        System.out.print("Amount: ");
+        return scanner.nextDouble();
+      }
+    }
+  ```
+    
+* **Don't Repeat Yourself (DRY):**
+  Em uma determinada classe, muitos métodos realizarão trabalho repetitivo ou similar,
+  com pequenas diferenças entre sí. Fazê-lo de forma ingênua: repetir código, implementar manualmente,
+  é inviável a longo prazo. Sempre que perceber repetição, abstraia essa operação para um método à parte,
+  da maneira mais genérica e reutilizável possível.
+
+  **Por exemplo,**
+  ```java
+    int roomArea = roomWidth * roomHeight;
+    int kitchenArea = kitchenWidth * kitchenHeight;
+    int screenArea = screenWidth * screenHeight;
+  ```
+
+  **Poderia ser re-escrito como,**
+  ```java
+    int area(Surface surface) {
+      return surface.getWidth() * surface.getHeight();
+    }
+
+    int roomArea = area(room);
+    int kitchenArea = area(kitchen);
+    int screenArea = area(screen);
+  ```
+* **Keep It Simple, Stupid (KISS):** 
+  Não implemente nada complexo demais. Bom código é código simples, mas sem ser desleixado.
+  Se é possível melhorar um método *assintoticamente*, melhore. Mas não faça micro-otimizações sem fim,
+  nem utilize padrões desnecessariamente abstratos.
+--- 
 
 ## Tecnologias e Dependências
 
-| Camada | Ferramenta | Propósito |
-| :--- | :--- | :--- |
-| **Linguagem** | Java 21 (JDK 21) | Linguagem de programação principal |
-| **Banco de Dados** | PostgreSQL | Persistência de informações |
-| **Persistência** | Spring Data JPA | Abstração do acesso ao banco de dados |
-| **Infraestrutura** | Docker Compose | Padronização do ambiente local |
-| **Migrações** | Flyway | Controle de versão do banco de dados |
-| **Sistema de Build** | Maven (via `mvnw`) | Compilação e gestão de dependências |
-| **Framework** | Spring Boot | Gerenciamento da API |
-| **Testes** | JUnit (Jupiter) | Criação e execução de testes unitários |
+| Camada                     | Ferramenta                     | Propósito                                                                          |
+| :------------------------- | :----------------------------- | :--------------------------------------------------------------------------------- |
+| **Linguagem**              | Java 21 (JDK 21)               | Linguagem de programação principal                                                 |
+| **Framework**              | Spring Boot                    | Desenvolvimento da API e gerenciamento da aplicação                                |
+| **Banco de Dados**         | PostgreSQL                     | Persistência das informações da biblioteca de mídia                                |
+| **Persistência**           | Spring Data JPA (Hibernate)    | Mapeamento objeto-relacional e acesso ao banco de dados                            |
+| **Autenticação**           | Spring Security                | Autenticação e autorização de usuários                                             |
+| **Sistema de Build**       | Maven (via `mvnw`)             | Compilação, gerenciamento de dependências e execução de tarefas                    |
+| **Infraestrutura**         | Docker Compose                 | Padronização do ambiente de desenvolvimento e execução                             |
+| **Processamento de Mídia** | FFmpeg e FFprobe               | Extração de metadados, geração de miniaturas e transcodificação de vídeos          |
+| **Metadados Externos**     | TMDB API / TVMaze API          | Obtenção de informações sobre filmes e séries                                      |
+| **Armazenamento**          | Sistema de Arquivos            | Armazenamento dos arquivos de mídia; o banco mantém apenas metadados e referências |
+| **Testes**                 | JUnit e Mockito                | Criação e execução de testes unitários                                             |
+| **Documentação da API**    | SpringDoc OpenAPI (Swagger UI) | Documentação e exploração interativa dos endpoints da API                          |
 
 ---
 
@@ -180,17 +246,17 @@ descreva brevemente o que foi feito e envie.
 O código do projeto segue a estrutura padrão do Maven. Posicione suas classes
 nos pacotes correspondentes:
 
-```text
+```fix
 src/
 ├── main/
 │   └── java/
-│       └── br/ufpb/onerous/
+│       └── br/ufpb/motus/
 │           ├── model/         # Records representando os objetos do sistema
 │           ├── repository/    # Mocks, simulações de APIs e dados de teste
-│           └── service/       # Lógica central (regras de auditoria e prazos)
+│           └── service/       # Lógica central
 └── test/
     └── java/
-        └── br/ufpb/onerous/
+        └── br/ufpb/motus/
             └── service/       # Testes unitários focados nas regras de negócio
 ```
 
@@ -200,18 +266,17 @@ src/
 
 Todos os identificadores de código (classes, métodos, variáveis e comentários
 nos arquivos-fonte) devem ser escritos em **inglês**.
-
 Busque um equilíbrio nos nomes: evite abreviações incompreensíveis e também
 evite nomes longos demais sem necessidade.
 
 ### Tabela de Convenções
 
-| Elemento | Convenção | Exemplo Inadequado | Exemplo Recomendado |
-| :--- | :--- | :--- | :--- |
-| **Classes / Records** | `PascalCase` | `SrvtProc` / `LeaveVerificationManager` | `ProcessValidator` |
-| **Métodos** | `camelCase` | `chkAcc()` / `verifyIfServantIsUpToDate()` | `hasPendingAccountability()` |
-| **Variáveis / Parâmetros** | `camelCase` | `dt` / `dateOnWhichTheServantReturned` | `returnDate` |
-| **Constantes** | `SCREAMING_SNAKE_CASE` | `limit` | `MAX_DAYS_FOR_ACCOUNTABILITY` |
+| Elemento                   | Convenção              | Exemplo Inadequado                                   | Exemplo Recomendado                          |
+| :------------------------- | :--------------------- | :--------------------------------------------------- | :------------------------------------------- |
+| **Classes / Records**      | `PascalCase`           | `MediaMgr` / `MovieLibraryControllerService`         | `MediaLibrary`, `StreamingService`           |
+| **Métodos**                | `camelCase`            | `scanDir()` / `processEveryMediaFileInsideLibrary()` | `scanLibrary()`, `generateThumbnail()`       |
+| **Variáveis / Parâmetros** | `camelCase`            | `vid`, `p`                                           | `mediaFile`, `libraryPath`                   |
+| **Constantes**             | `SCREAMING_SNAKE_CASE` | `port`, `sizeLimit`                                  | `DEFAULT_STREAM_PORT`, `MAX_THUMBNAIL_WIDTH` |
 
 ---
 
@@ -229,24 +294,3 @@ ao seu sistema operacional:
     ```bash
     ./mvnw test
     ```
-
----
-
-## Estrutura do Banco de Dados
-
-Todas as alterações no banco de dados (como criar tabelas ou adicionar colunas)
-devem ser feitas criando um novo arquivo SQL na pasta de migrações:
-
-```text
-src/
-└── main/
-    └── resources/
-        └── db/
-            └── migration/
-                ├── V1__add_nycolas_field.sql
-                └── V2__add_documents_table.sql
-```
-
-> **Atenção:** Nunca altere uma migração que já foi executada e enviada para a
-> branch `master`/`main`. Se precisar corrigir algo, crie uma nova migração
-> (ex: `V3__correcao_tabela_documentos.sql`).
