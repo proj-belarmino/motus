@@ -72,7 +72,7 @@ Instruções rápidas para inicialização local da aplicação e do banco:
   ```bash
   docker compose up -d
   ```
-  
+ 
 * **Compilar o projeto e executar as migrações:**
   ```bash
   mvn clean compile
