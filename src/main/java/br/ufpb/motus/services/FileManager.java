@@ -1,4 +1,4 @@
-package br.ufpb.motus.service;
+package br.ufpb.motus.services;
 
 import org.jspecify.annotations.NonNull;
 

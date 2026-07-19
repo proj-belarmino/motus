@@ -1,4 +1,4 @@
-package br.ufpb.motus.service;
+package br.ufpb.motus.services;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -18,20 +18,24 @@ public final class CommandRunner {
     private final List<String> command = new ArrayList<>();
     private Duration timeout = Duration.ofMinutes(5);
 
+    // Privately construct from a single root command string
     private CommandRunner(String baseCommand) {
         this.command.add(baseCommand);
     }
 
+    // Privately construct from a full command declaration
     private CommandRunner(List<String> command) {
         this.command.addAll(command);
     }
 
+    // Public constructor (as static method) for commands, resolves what is used
     public static @NonNull CommandRunner command(String baseCommand, String... initialArguments) {
         CommandRunner runner = new CommandRunner(baseCommand);
         runner.command.addAll(Arrays.asList(initialArguments));
         return runner;
     }
 
+    // Passes a new argument to the instantiated command
     public CommandRunner withArgument(String argument) {
         if (argument != null) {
             this.command.add(argument);
@@ -39,6 +43,7 @@ public final class CommandRunner {
         return this;
     }
 
+    // Passes arguments in batch to the instantiated command
     public CommandRunner withArguments(String... arguments) {
         if (arguments != null) {
             this.command.addAll(Arrays.asList(arguments));
@@ -46,11 +51,13 @@ public final class CommandRunner {
         return this;
     }
 
+    // Sets the timeout for the instantiated command
     public CommandRunner withTimeout(Duration timeout) {
         this.timeout = timeout;
         return this;
     }
 
+    // Executes the command
     @org.jetbrains.annotations.Contract(" -> new")
     public @NonNull CommandResult run() {
         Process process = null;
