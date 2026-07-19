@@ -8,20 +8,21 @@ import java.util.concurrent.Executors;
 import java.util.function.Supplier;
 
 public final class TaskScheduler {
-    private static final ExecutorService EXECUTOR = resolvePool();
+    private static final ExecutorService IO_EXECUTOR = resolveLightPool();
+    private static final ExecutorService CPU_EXECUTOR = resolveHeavyPool();
 
     private TaskScheduler() {}
 
     // Submit new asynchronous task (with return value).
     @Contract(value = "_ -> new", pure = true)
     public static <Type> @NonNull TaskBuilder<Type> submit(Supplier<Type> task) {
-        return new TaskBuilder<>(EXECUTOR, task);
+        return new TaskBuilder<>(task);
     }
 
     // Submit new asynchronous task (no return value).
     @Contract(value = "_ -> new", pure = true)
     public static @NonNull TaskBuilder<Void> submit(Runnable task) {
-        return new TaskBuilder<>(EXECUTOR, () -> {
+        return new TaskBuilder<>(() -> {
             task.run();
             return null;
         });
@@ -29,11 +30,23 @@ public final class TaskScheduler {
 
     // Ends operations orderly.
     public static void shutdown() {
-        EXECUTOR.shutdown();
+        IO_EXECUTOR.shutdown();
+        CPU_EXECUTOR.shutdown();
     }
 
-    // Initialises the thread pool.
-    private static @NonNull ExecutorService resolvePool() {
+    // Dynamically resolve executor.
+    static void enqueue(Runnable task, boolean cpuBound) {
+        ExecutorService executor = cpuBound ? CPU_EXECUTOR : IO_EXECUTOR;
+        executor.submit(task);
+    }
+
+    // Initialises the IO thread pool.
+    private static @NonNull ExecutorService resolveLightPool() {
+        return Executors.newVirtualThreadPerTaskExecutor();
+    }
+
+    // Initialises the CPU thread pool.
+    private static @NonNull ExecutorService resolveHeavyPool() {
         var poolSize = Math.max(2, Runtime.getRuntime().availableProcessors());
         return Executors.newFixedThreadPool(poolSize);
     }

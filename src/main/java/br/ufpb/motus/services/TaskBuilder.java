@@ -1,19 +1,23 @@
 package br.ufpb.motus.services;
 
-import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public final class TaskBuilder<Type> {
-    private final ExecutorService executor;
     private final Supplier<Type> task;
+    private boolean cpuBound = false;
     private Consumer<Type> onSuccess = result -> {};
     private Consumer<Throwable> onFailure = throwable -> {};
 
     // Builder.
-    public TaskBuilder(ExecutorService executor, Supplier<Type> task) {
-        this.executor = executor;
+    TaskBuilder(Supplier<Type> task) {
         this.task = task;
+    }
+
+    // Mark the task as CPU bound.
+    public TaskBuilder<Type> cpuBound() {
+        this.cpuBound = true;
+        return this;
     }
 
     // Register success event callback.
@@ -34,13 +38,13 @@ public final class TaskBuilder<Type> {
 
     // Dispatch task to execution queue.
     public void queue() {
-        executor.submit(() -> {
+        TaskScheduler.enqueue(() -> {
             try {
                 Type taskResult = task.get();
                 onSuccess.accept(taskResult);
-            } catch (Throwable throwable) {
+            }  catch (Throwable throwable) {
                 onFailure.accept(throwable);
             }
-        });
+        }, cpuBound);
     }
 }
