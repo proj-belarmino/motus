@@ -1,4 +1,4 @@
-package br.ufpb.motus.services;
+package br.ufpb.motus.services.commands;
 
 import java.io.BufferedReader;
 import java.io.IOException;
