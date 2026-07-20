@@ -1,6 +1,6 @@
 package br.ufpb.motus.services.network;
 
-import br.ufpb.motus.records.RangeResponse;
+import br.ufpb.motus.model.RangeResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.NonNull;

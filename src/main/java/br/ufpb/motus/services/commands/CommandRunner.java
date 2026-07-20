@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import br.ufpb.motus.records.CommandResult;
+import br.ufpb.motus.model.CommandResult;
 import org.jspecify.annotations.NonNull;
 
 public final class CommandRunner {

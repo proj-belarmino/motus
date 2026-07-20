@@ -1,4 +1,4 @@
-package br.ufpb.motus.records;
+package br.ufpb.motus.model;
 
 import java.io.InputStream;
 
