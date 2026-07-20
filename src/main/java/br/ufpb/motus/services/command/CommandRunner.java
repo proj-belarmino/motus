@@ -1,4 +1,4 @@
-package br.ufpb.motus.services.commands;
+package br.ufpb.motus.services.command;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import br.ufpb.motus.model.CommandResult;
+import br.ufpb.motus.model.command.CommandResult;
 import org.jspecify.annotations.NonNull;
 
 public final class CommandRunner {
@@ -28,7 +28,7 @@ public final class CommandRunner {
         this.command.addAll(command);
     }
 
-    // Public constructor (as static method) for commands, resolves what is used
+    // Public constructor (as static method) for command, resolves what is used
     public static @NonNull CommandRunner command(String baseCommand, String... initialArguments) {
         CommandRunner runner = new CommandRunner(baseCommand);
         runner.command.addAll(Arrays.asList(initialArguments));

@@ -1,4 +1,4 @@
-package br.ufpb.motus.model;
+package br.ufpb.motus.model.movie;
 
 import java.time.LocalDate;
 import java.util.List;

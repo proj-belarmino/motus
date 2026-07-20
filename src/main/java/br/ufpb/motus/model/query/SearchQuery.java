@@ -1,4 +1,4 @@
-package br.ufpb.motus.model;
+package br.ufpb.motus.model.query;
 
 public record SearchQuery(
     String genre,

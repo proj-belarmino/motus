@@ -1,4 +1,4 @@
-package br.ufpb.motus.model;
+package br.ufpb.motus.model.fs;
 
 import java.nio.file.Path;
 
