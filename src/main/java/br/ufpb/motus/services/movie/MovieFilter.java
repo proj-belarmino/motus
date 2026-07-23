@@ -31,7 +31,7 @@ public class MovieFilter {
 
     private Specification<MovieEntity> byGenre(String genre) {
         return (root, criteriaQuery, cb) -> {
-            var genreColumn = cb.lower(root.get("genre"));
+            var genreColumn = cb.lower(root.get("genres"));
             var searchTerm = genre.toLowerCase();
             var pattern = "%" + searchTerm + "%";
             return cb.like(genreColumn,pattern);
