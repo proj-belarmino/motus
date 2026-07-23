@@ -31,10 +31,9 @@ public class MovieFilter {
 
     private Specification<MovieEntity> byGenre(String genre) {
         return (root, criteriaQuery, cb) -> {
-            var genreColumn = cb.lower(root.get("genres"));
-            var searchTerm = genre.toLowerCase();
-            var pattern = "%" + searchTerm + "%";
-            return cb.like(genreColumn,pattern);
+            var genresColumn = root.get("genres");
+            var exists = cb.function("jsonb_exists", Boolean.class, genresColumn, cb.literal(genre));
+            return cb.isTrue(exists);
         };
     }
 
