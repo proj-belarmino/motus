@@ -18,6 +18,10 @@ public class MovieFilter {
             spec = spec.and(byDirector(query.director()));
         }
 
+        if (query.minRating() != null){
+            spec = spec.and(byRating(query.minRating()));
+        }
+
         return spec;
     }
 
@@ -32,9 +36,15 @@ public class MovieFilter {
     private Specification<MovieEntity> byDirector(String director) {
         return (root, criteriaQuery, cb) -> {
             var directorColumn = cb.lower(root.get("director"));// Pega a coluna director e converte para minúsculo
-            var searchTerm = director.toLowerCase();            // Pega o texto do usuário e deixa minúsculo  
-            var pattern = "%" + searchTerm + "%";               // Monta padrão de busca
+            var searchTerm = director.toLowerCase();                          // Pega o texto do usuário e deixa minúsculo  
+            var pattern = "%" + searchTerm + "%";                             // Monta padrão de busca
             return cb.like(directorColumn, pattern);
         };
+    }
+
+    private Specification<MovieEntity> byRating(double star){
+        return(root, criteriaQuery, cb)->{
+            return cb.greaterThanOrEqualTo(root.get("rating"), star); //valores acima de star
+        };   
     }
 }
