@@ -10,6 +10,10 @@ public class MovieFilter {
     public Specification<MovieEntity> filter(SearchQuery query){
         Specification<MovieEntity> spec = Specification.unrestricted();
 
+        if (query.genre() != null) {
+            spec = spec.and(byGenre(query.genre()));
+        }
+
         if (query.year() != null) {
             spec = spec.and(byYear(query.year()));
         }
@@ -23,6 +27,15 @@ public class MovieFilter {
         }
 
         return spec;
+    }
+
+    private Specification<MovieEntity> byGenre(String genre) {
+        return (root, criteriaQuery, cb) -> {
+            var genreColumn = cb.lower(root.get("genre"));
+            var searchTerm = genre.toLowerCase();
+            var pattern = "%" + searchTerm + "%";
+            return cb.like(genreColumn,pattern);
+        };
     }
 
     private Specification<MovieEntity> byYear(Integer year) {
