@@ -1,16 +1,20 @@
 package br.ufpb.motus.services.movie;
 
 import br.ufpb.motus.model.movie.ExternalMovieInfo;
+import br.ufpb.motus.model.movie.MovieEntity;
 import br.ufpb.motus.model.movie.TmdbGenre;
 import br.ufpb.motus.model.movie.TmdbGenreListResponse;
 import br.ufpb.motus.model.movie.TmdbMovieResult;
 import br.ufpb.motus.model.movie.TmdbSearchResponse;
+import br.ufpb.motus.services.fs.FileManager;
 import br.ufpb.motus.services.network.NetworkClient;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class MovieMetadataService {
@@ -28,6 +32,23 @@ public class MovieMetadataService {
         TmdbSearchResponse response = search(title);
         TmdbMovieResult result = pickBestResult(response);
         return toExternalMovieInfo(result);
+    }
+
+    // metadata (FFprobe) e coverPath (download da imagem) ainda não existem, ficam null por enquanto
+    public MovieEntity toEntity(Path filePath, ExternalMovieInfo info) {
+        return new MovieEntity(
+                UUID.randomUUID().toString(),
+                info.title(),
+                info.originalTitle(),
+                filePath.toString(),
+                info.releaseDate(),
+                info.director(),
+                info.genres(),
+                info.rating(),
+                null,
+                FileManager.SHA256(filePath),
+                null
+        );
     }
 
     private TmdbSearchResponse search(String title) {
