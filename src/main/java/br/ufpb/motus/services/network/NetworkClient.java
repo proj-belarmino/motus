@@ -1,6 +1,7 @@
 package br.ufpb.motus.services.network;
 
 import br.ufpb.motus.model.network.RangeResponse;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.NonNull;
@@ -16,7 +17,9 @@ import java.util.Map;
 public final class NetworkClient {
     private static final NetworkEngine ENGINE = new NetworkEngine();
     private static final RetryExecutor RETRY_EXECUTOR = new RetryExecutor(5, 200);
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
+            .findAndRegisterModules()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private NetworkClient() {}
 
