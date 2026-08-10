@@ -13,16 +13,13 @@ public class MovieFilter {
         if (query.genre() != null) {
             spec = spec.and(byGenre(query.genre()));
         }
-
         if (query.year() != null) {
             spec = spec.and(byYear(query.year()));
         }
-
-        if (query.director() != null){
+        if (query.director() != null) {
             spec = spec.and(byDirector(query.director()));
         }
-
-        if (query.minRating() != null){
+        if (query.minRating() != null) {
             spec = spec.and(byRating(query.minRating()));
         }
 
@@ -55,7 +52,7 @@ public class MovieFilter {
     }
 
     private Specification<MovieEntity> byRating(double star){
-        return(root, criteriaQuery, cb)->{
+        return (root, criteriaQuery, cb) ->{
             return cb.greaterThanOrEqualTo(root.get("rating"), star); //valores acima de star
         };   
     }
