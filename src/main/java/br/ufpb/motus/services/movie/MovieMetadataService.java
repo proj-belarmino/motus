@@ -10,66 +10,92 @@ import br.ufpb.motus.model.movie.TmdbMovieResult;
 import br.ufpb.motus.model.movie.TmdbSearchResponse;
 import br.ufpb.motus.services.fs.FileManager;
 import br.ufpb.motus.services.network.NetworkClient;
+import org.jetbrains.annotations.Contract;
+import org.jspecify.annotations.NonNull;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/**
+ * provides metadata enrichment for media files by communicating with the TMDB external api.
+ * instances of this class are thread-safe.
+ */
+@Service
 public class MovieMetadataService {
+
     private static final String BASE_URL = "https://api.themoviedb.org/3";
     private static final String POSTER_BASE_URL = "https://image.tmdb.org/t/p/w500";
 
+    private final NetworkClient networkClient;
     private final String apiKey;
-    private Map<Integer, String> genreCache;
 
-    public MovieMetadataService(String apiKey) {
+    // volatile ensures thread visibility for double-checked locking
+    private volatile Map<Integer, String> genreCache;
+
+    public MovieMetadataService(
+            NetworkClient networkClient,
+            @Value("${tmdb.api.key}") String apiKey) {
+        this.networkClient = networkClient;
         this.apiKey = apiKey;
     }
 
-    public ExternalMovieInfo fetchByTitle(String title) {
+    /**
+     * attempts to resolve detailed metadata for a movie based on its title.
+     *
+     * @param title the sanitised movie title
+     * @return an optional containing the enriched metadata, or empty if not found
+     */
+    public @NonNull Optional<ExternalMovieInfo> fetchByTitle(@NonNull String title) {
+        if (title.isBlank()) {
+            return Optional.empty();
+        }
+
         TmdbSearchResponse response = search(title);
-        TmdbMovieResult result = pickBestResult(response);
-        return toExternalMovieInfo(result);
+
+        if (response.results() == null || response.results().isEmpty()) {
+            return Optional.empty();
+        }
+
+        TmdbMovieResult bestResult = response.results().getFirst();
+        return Optional.of(toExternalMovieInfo(bestResult));
     }
 
-    // metadata (FFprobe) e coverPath (download da imagem) ainda não existem, ficam null por enquanto
-    public MovieEntity toEntity(Path filePath, ExternalMovieInfo info) {
+    @Contract("_, _ -> new")
+    public @NonNull MovieEntity toEntity(@NonNull Path filePath, @NonNull ExternalMovieInfo info) {
         return new MovieEntity(
                 UUID.randomUUID().toString(),
                 info.title(),
                 info.originalTitle(),
-                filePath.toString(),
+                filePath.toAbsolutePath().toString(),
                 info.releaseDate(),
                 info.director(),
                 info.genres(),
                 info.rating(),
                 null,
-                FileManager.SHA256(filePath),
+                FileManager.calculateSha256(filePath),
                 null
         );
     }
 
-    private TmdbSearchResponse search(String title) {
+    private @NonNull TmdbSearchResponse search(@NonNull String title) {
         String encodedTitle = URLEncoder.encode(title, StandardCharsets.UTF_8);
         String url = BASE_URL + "/search/movie?query=" + encodedTitle + "&api_key=" + apiKey;
-        return NetworkClient.get(url, TmdbSearchResponse.class, Map.of());
+        return networkClient.get(url, TmdbSearchResponse.class, Map.of());
     }
 
-    private TmdbMovieResult pickBestResult(TmdbSearchResponse response) {
-        if (response.results().isEmpty()) {
-            throw new IllegalStateException("No TMDB results found");
-        }
-        return response.results().get(0);
-    }
-
-    private ExternalMovieInfo toExternalMovieInfo(TmdbMovieResult result) {
+    @Contract("_ -> new")
+    private @NonNull ExternalMovieInfo toExternalMovieInfo(@NonNull TmdbMovieResult result) {
         List<String> genres = resolveGenres(result.genreIds());
-        String coverUrl = POSTER_BASE_URL + result.posterPath();
-        String director = fetchDirector(result.id());
+        String coverUrl = result.posterPath() != null ? POSTER_BASE_URL + result.posterPath() : null;
+        String director = fetchDirector(result.id()).orElse(null);
 
         return new ExternalMovieInfo(
                 result.title(),
@@ -83,35 +109,54 @@ public class MovieMetadataService {
         );
     }
 
-    private String fetchDirector(int movieId) {
+    private @NonNull Optional<String> fetchDirector(int movieId) {
         String url = BASE_URL + "/movie/" + movieId + "/credits?api_key=" + apiKey;
-        TmdbCreditsResponse response = NetworkClient.get(url, TmdbCreditsResponse.class, Map.of());
+        TmdbCreditsResponse response = networkClient.get(url, TmdbCreditsResponse.class, Map.of());
+
+        if (response.crew() == null) {
+            return Optional.empty();
+        }
 
         return response.crew().stream()
                 .filter(member -> "Director".equals(member.job()))
                 .map(TmdbCrewMember::name)
-                .findFirst()
-                .orElse(null);
+                .findFirst();
     }
 
-    private List<String> resolveGenres(List<Integer> genreIds) {
+    private @NonNull List<String> resolveGenres(List<Integer> genreIds) {
+        if (genreIds == null) {
+            return List.of();
+        }
+
         Map<Integer, String> genreMap = getGenreMap();
         return genreIds.stream()
                 .map(genreMap::get)
-                .collect(Collectors.toList());
+                .filter(java.util.Objects::nonNull)
+                .toList();
     }
 
-    private Map<Integer, String> getGenreMap() {
-        if (genreCache == null) {
-            genreCache = fetchGenreMap();
+    private @NonNull Map<Integer, String> getGenreMap() {
+        Map<Integer, String> cache = genreCache;
+        if (cache == null) {
+            synchronized (this) {
+                cache = genreCache;
+                if (cache == null) {
+                    genreCache = cache = fetchGenreMap();
+                }
+            }
         }
-        return genreCache;
+        return cache;
     }
 
-    private Map<Integer, String> fetchGenreMap() {
+    private @NonNull Map<Integer, String> fetchGenreMap() {
         String url = BASE_URL + "/genre/movie/list?api_key=" + apiKey;
-        TmdbGenreListResponse response = NetworkClient.get(url, TmdbGenreListResponse.class, Map.of());
+        TmdbGenreListResponse response = networkClient.get(url, TmdbGenreListResponse.class, Map.of());
+
+        if (response.genres() == null) {
+            return Map.of();
+        }
+
         return response.genres().stream()
-                .collect(Collectors.toMap(TmdbGenre::id, TmdbGenre::name));
+                .collect(Collectors.toUnmodifiableMap(TmdbGenre::id, TmdbGenre::name));
     }
 }

@@ -2,12 +2,17 @@ package br.ufpb.motus.services.movie;
 
 import br.ufpb.motus.model.movie.MovieEntity;
 import br.ufpb.motus.model.query.SearchQuery;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.time.LocalDate;
 
-public class MovieFilter {
-    public Specification<MovieEntity> filter(SearchQuery query){
+/**
+ * constructs dynamic database queries for movie metadata based on search parameters.
+ */
+final class MovieFilter {
+
+    @NonNull Specification<MovieEntity> filter(@NonNull SearchQuery query) {
         Specification<MovieEntity> spec = Specification.unrestricted();
 
         if (query.genre() != null) {
@@ -26,7 +31,7 @@ public class MovieFilter {
         return spec;
     }
 
-    private Specification<MovieEntity> byGenre(String genre) {
+    private @NonNull Specification<MovieEntity> byGenre(@NonNull String genre) {
         return (root, criteriaQuery, cb) -> {
             var genresColumn = root.get("genres");
             var exists = cb.function("jsonb_exists", Boolean.class, genresColumn, cb.literal(genre));
@@ -34,7 +39,7 @@ public class MovieFilter {
         };
     }
 
-    private Specification<MovieEntity> byYear(Integer year) {
+    private @NonNull Specification<MovieEntity> byYear(@NonNull Integer year) {
         return (root, criteriaQuery, cb) -> {
             LocalDate start = LocalDate.of(year, 1, 1);
             LocalDate end = LocalDate.of(year, 12, 31);
@@ -42,18 +47,15 @@ public class MovieFilter {
         };
     }
 
-    private Specification<MovieEntity> byDirector(String director) {
+    private @NonNull Specification<MovieEntity> byDirector(@NonNull String director) {
         return (root, criteriaQuery, cb) -> {
-            var directorColumn = cb.lower(root.get("director"));// Pega a coluna director e converte para minúsculo
-            var searchTerm = director.toLowerCase();                          // Pega o texto do usuário e deixa minúsculo  
-            var pattern = "%" + searchTerm + "%";                             // Monta padrão de busca
+            var directorColumn = cb.lower(root.get("director"));
+            var pattern = "%" + director.toLowerCase() + "%";
             return cb.like(directorColumn, pattern);
         };
     }
 
-    private Specification<MovieEntity> byRating(double star){
-        return (root, criteriaQuery, cb) ->{
-            return cb.greaterThanOrEqualTo(root.get("rating"), star); //valores acima de star
-        };   
+    private @NonNull Specification<MovieEntity> byRating(double star) {
+        return (root, criteriaQuery, cb) -> cb.greaterThanOrEqualTo(root.get("rating"), star);
     }
 }

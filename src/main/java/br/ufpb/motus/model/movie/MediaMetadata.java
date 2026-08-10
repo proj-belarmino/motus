@@ -1,9 +1,11 @@
 package br.ufpb.motus.model.movie;
 
+import org.jspecify.annotations.Nullable;
+
 public record MediaMetadata(
-        String videoCodec,
-        String audioCodec,
-        String resolution,
+        @Nullable String videoCodec,
+        @Nullable String audioCodec,
+        @Nullable String resolution,
         long bitrate,
         long fileSize,
         double durationSeconds
