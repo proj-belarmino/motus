@@ -1,25 +1,36 @@
 package br.ufpb.motus.services.tasks;
 
+import br.ufpb.motus.services.log.Logger;
 import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.NonNull;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+/**
+ * stateless task dispatcher managing internal thread pools.
+ * handles jvm shutdown gracefully.
+ */
 public final class TaskScheduler {
-    private static final ExecutorService IO_EXECUTOR = resolveLightPool();
-    private static final ExecutorService CPU_EXECUTOR = resolveHeavyPool();
+
+    private static final ExecutorService IO_EXECUTOR = Executors.newVirtualThreadPerTaskExecutor();
+    private static final ExecutorService CPU_EXECUTOR = Executors.newFixedThreadPool(
+            Math.max(2, Runtime.getRuntime().availableProcessors())
+    );
+
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread(TaskScheduler::shutdown));
+    }
 
     private TaskScheduler() {}
 
-    // Submit new asynchronous task (with return value).
     @Contract(value = "_ -> new", pure = true)
     public static <Type> @NonNull TaskBuilder<Type> submit(Supplier<Type> task) {
         return new TaskBuilder<>(task);
     }
 
-    // Submit new asynchronous task (no return value).
     @Contract(value = "_ -> new", pure = true)
     public static @NonNull TaskBuilder<Void> submit(Runnable task) {
         return new TaskBuilder<>(() -> {
@@ -28,28 +39,26 @@ public final class TaskScheduler {
         });
     }
 
-    // Ends operations orderly.
-    public static void shutdown() {
-        IO_EXECUTOR.shutdown();
-        CPU_EXECUTOR.shutdown();
-    }
-
-    // Dynamically resolve executor.
     static void enqueue(Runnable task, boolean cpuBound) {
         ExecutorService executor = cpuBound ? CPU_EXECUTOR : IO_EXECUTOR;
         executor.submit(task);
     }
 
-    // Initialises the IO thread pool.
-    private static @NonNull ExecutorService resolveLightPool() {
-        return Executors.newVirtualThreadPerTaskExecutor();
+    private static void shutdown() {
+        Logger.info("shutting down task scheduler pools...");
+        shutdownPool(IO_EXECUTOR, "io pool");
+        shutdownPool(CPU_EXECUTOR, "cpu pool");
     }
 
-    // Initialises the CPU thread pool.
-    private static @NonNull ExecutorService resolveHeavyPool() {
-        var poolSize = Math.max(2, Runtime.getRuntime().availableProcessors());
-        return Executors.newFixedThreadPool(poolSize);
+    private static void shutdownPool(ExecutorService pool, String name) {
+        pool.shutdown();
+        try {
+            if (!pool.awaitTermination(5, TimeUnit.SECONDS)) {
+                pool.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            pool.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 }
-
-

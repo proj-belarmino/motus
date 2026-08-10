@@ -1,10 +1,10 @@
 package br.ufpb.motus.services.network;
 
+import br.ufpb.motus.model.exception.NetworkOperationException;
 import org.jspecify.annotations.NonNull;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -16,38 +16,35 @@ final class NetworkEngine {
             .connectTimeout(CONNECT_TIMEOUT)
             .build();
 
-    // Regular request send.
-    public String sendForString(HttpRequest request, String url) {
+    public @NonNull String sendForString(@NonNull HttpRequest request, @NonNull String url) {
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             validateStatus(response.statusCode(), url);
             return response.body();
         } catch (IOException error) {
-            throw new UncheckedIOException(error);
+            throw new NetworkOperationException("io error during network request", url, -1, error);
         } catch (InterruptedException error) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException(String.format("HTTP execution interrupted for %s", url), error);
+            throw new NetworkOperationException("network request interrupted", url, -1, error);
         }
     }
 
-    // Streamed request send.
-    public @NonNull HttpResponse<InputStream> sendForStream(HttpRequest request, String url) {
+    public @NonNull HttpResponse<InputStream> sendForStream(@NonNull HttpRequest request, @NonNull String url) {
         try {
             HttpResponse<InputStream> response = client.send(request, HttpResponse.BodyHandlers.ofInputStream());
             validateStatus(response.statusCode(), url);
             return response;
         } catch (IOException error) {
-            throw new UncheckedIOException(error);
+            throw new NetworkOperationException("io error during range stream request", url, -1, error);
         } catch (InterruptedException error) {
             Thread.currentThread().interrupt();
-            throw new RuntimeException(String.format("HTTP stream execution interrupted for %s", url), error);
+            throw new NetworkOperationException("range stream request interrupted", url, -1, error);
         }
     }
 
-    // Check if there was an error and throw.
-    private void validateStatus(int statusCode, String url) {
+    private void validateStatus(int statusCode, @NonNull String url) {
         if (statusCode < 200 || statusCode >= 300) {
-            throw new RuntimeException(String.format("HTTP request failed with status: %d for %s", statusCode, url));
+            throw new NetworkOperationException("http request failed", url, statusCode, null);
         }
     }
 }
