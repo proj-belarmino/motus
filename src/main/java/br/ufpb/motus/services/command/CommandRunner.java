@@ -1,5 +1,9 @@
 package br.ufpb.motus.services.command;
 
+import br.ufpb.motus.model.command.CommandResult;
+import br.ufpb.motus.model.exception.CommandExecutionException;
+import org.jspecify.annotations.NonNull;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -11,101 +15,87 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import br.ufpb.motus.model.command.CommandResult;
-import org.jspecify.annotations.NonNull;
-
+/**
+ * immutable builder for executing external processes.
+ */
 public final class CommandRunner {
-    private final List<String> command = new ArrayList<>();
-    private Duration timeout = Duration.ofMinutes(5);
+    private final List<String> command;
+    private final Duration timeout;
 
-    // Privately construct from a single root command string
-    private CommandRunner(String baseCommand) {
-        this.command.add(baseCommand);
-    }
-
-    // Privately construct from a full command declaration
-    private CommandRunner(List<String> command) {
-        this.command.addAll(command);
-    }
-
-    // Public constructor (as static method) for command, resolves what is used
-    public static @NonNull CommandRunner command(String baseCommand, String... initialArguments) {
-        CommandRunner runner = new CommandRunner(baseCommand);
-        runner.command.addAll(Arrays.asList(initialArguments));
-        return runner;
-    }
-
-    // Passes a new argument to the instantiated command
-    public CommandRunner withArgument(String argument) {
-        if (argument != null) {
-            this.command.add(argument);
-        }
-        return this;
-    }
-
-    // Passes arguments in batch to the instantiated command
-    public CommandRunner withArguments(String... arguments) {
-        if (arguments != null) {
-            this.command.addAll(Arrays.asList(arguments));
-        }
-        return this;
-    }
-
-    // Sets the timeout for the instantiated command
-    public CommandRunner withTimeout(Duration timeout) {
+    private CommandRunner(List<String> command, Duration timeout) {
+        this.command = List.copyOf(command);
         this.timeout = timeout;
-        return this;
     }
 
-    // Executes the command
+    public static @NonNull CommandRunner command(String baseCommand, String... initialArguments) {
+        List<String> fullCommand = new ArrayList<>();
+        fullCommand.add(baseCommand);
+        if (initialArguments != null) {
+            fullCommand.addAll(Arrays.asList(initialArguments));
+        }
+        return new CommandRunner(fullCommand, Duration.ofMinutes(5));
+    }
+
+    public CommandRunner withArgument(String argument) {
+        if (argument == null) return this;
+        List<String> newCommand = new ArrayList<>(this.command);
+        newCommand.add(argument);
+        return new CommandRunner(newCommand, this.timeout);
+    }
+
+    public CommandRunner withArguments(String... arguments) {
+        if (arguments == null || arguments.length == 0) return this;
+        List<String> newCommand = new ArrayList<>(this.command);
+        newCommand.addAll(Arrays.asList(arguments));
+        return new CommandRunner(newCommand, this.timeout);
+    }
+
+    public CommandRunner withTimeout(Duration timeout) {
+        return new CommandRunner(this.command, timeout);
+    }
+
     @org.jetbrains.annotations.Contract(" -> new")
     public @NonNull CommandResult run() {
         Process process = null;
+        String fullCommandStr = String.join(" ", command);
+
         try {
             ProcessBuilder processBuilder = new ProcessBuilder(command);
             processBuilder.redirectErrorStream(true);
-
             process = processBuilder.start();
 
             boolean finished = process.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS);
             if (!finished) {
                 process.destroyForcibly();
-                String fullCommand = String.join(" ", command);
-                String exception = String.format("Command timed out after %d seconds: %s", timeout.toSeconds(), fullCommand);
-                throw new RuntimeException(exception);
+                throw new CommandExecutionException("command timed out", fullCommandStr, -1, "");
             }
 
             int exitCode = process.exitValue();
             String outputBuffer;
 
-            var inputStream = process.getInputStream();
-            var inputReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
-            var bufferedReader = new BufferedReader(inputReader);
-
-            try(bufferedReader) {
-                var lineCollector = Collectors.joining("\n");
-                outputBuffer = bufferedReader.lines().collect(lineCollector);
+            try (var inputReader = new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8);
+                 var bufferedReader = new BufferedReader(inputReader)) {
+                outputBuffer = bufferedReader.lines().collect(Collectors.joining("\n"));
             }
 
             if (exitCode != 0) {
-                String exception = String.format("Command failed with exit code: %d. Output:\n%s", exitCode, outputBuffer);
-                throw new RuntimeException(exception);
+                throw new CommandExecutionException("command failed", fullCommandStr, exitCode, outputBuffer);
             }
 
             return new CommandResult(exitCode, outputBuffer);
+
         } catch (IOException error) {
             ensureDestruction(process);
-            throw new RuntimeException(error);
+            throw new CommandExecutionException("io error executing command", fullCommandStr, -1, error.getMessage());
         } catch (InterruptedException error) {
             ensureDestruction(process);
             Thread.currentThread().interrupt();
-            throw new RuntimeException(error);
+            throw new CommandExecutionException("command interrupted", fullCommandStr, -1, error.getMessage());
         }
     }
 
     private void ensureDestruction(Process process) {
-        boolean valid = process != null && process.isAlive();
-        if (valid) {
+        if (process != null && process.isAlive()) {
             process.destroyForcibly();
         }
     }
