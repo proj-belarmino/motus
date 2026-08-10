@@ -2,6 +2,8 @@ package br.ufpb.motus.services.movie;
 
 import br.ufpb.motus.model.movie.ExternalMovieInfo;
 import br.ufpb.motus.model.movie.MovieEntity;
+import br.ufpb.motus.model.movie.TmdbCreditsResponse;
+import br.ufpb.motus.model.movie.TmdbCrewMember;
 import br.ufpb.motus.model.movie.TmdbGenre;
 import br.ufpb.motus.model.movie.TmdbGenreListResponse;
 import br.ufpb.motus.model.movie.TmdbMovieResult;
@@ -67,17 +69,29 @@ public class MovieMetadataService {
     private ExternalMovieInfo toExternalMovieInfo(TmdbMovieResult result) {
         List<String> genres = resolveGenres(result.genreIds());
         String coverUrl = POSTER_BASE_URL + result.posterPath();
+        String director = fetchDirector(result.id());
 
         return new ExternalMovieInfo(
                 result.title(),
                 result.originalTitle(),
-                null,
+                director,
                 coverUrl,
                 result.overview(),
                 result.releaseDate(),
                 genres,
                 result.voteAverage()
         );
+    }
+
+    private String fetchDirector(int movieId) {
+        String url = BASE_URL + "/movie/" + movieId + "/credits?api_key=" + apiKey;
+        TmdbCreditsResponse response = NetworkClient.get(url, TmdbCreditsResponse.class, Map.of());
+
+        return response.crew().stream()
+                .filter(member -> "Director".equals(member.job()))
+                .map(TmdbCrewMember::name)
+                .findFirst()
+                .orElse(null);
     }
 
     private List<String> resolveGenres(List<Integer> genreIds) {
