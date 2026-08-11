@@ -9,9 +9,12 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/api/movies")
@@ -50,5 +53,24 @@ public class MovieController {
     public ResponseEntity<Void> triggerScan() {
         movieService.triggerBackgroundScan();
         return ResponseEntity.accepted().build();
+    }
+
+    @PostMapping("/upload")
+    public ResponseEntity<Void> uploadMovie(@RequestParam("file") MultipartFile file) {
+        movieService.uploadMovie(file);
+        return ResponseEntity.accepted().build();
+    }
+
+    public record TitleUpdateRequest(String title) {
+    }
+
+    @PutMapping("/{id}/title")
+    public ResponseEntity<Movie> updateTitle(@PathVariable String id, @RequestBody TitleUpdateRequest request) {
+        return ResponseEntity.ok(movieService.updateTitle(id, request.title()));
+    }
+
+    @PostMapping("/{id}/refresh")
+    public ResponseEntity<Movie> refreshMovie(@PathVariable String id) {
+        return ResponseEntity.ok(movieService.refreshMovie(id));
     }
 }

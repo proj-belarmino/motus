@@ -21,6 +21,10 @@ public class WebResourceConfig implements WebMvcConfigurer {
     public void addResourceHandlers(@NonNull ResourceHandlerRegistry registry) {
         String absoluteThumbnailsPath = Paths.get(thumbnailsPath).toAbsolutePath().toUri().toString();
 
+        if (!absoluteThumbnailsPath.endsWith("/")) {
+            absoluteThumbnailsPath += "/";
+        }
+
         registry.addResourceHandler("/api/thumbnails/**")
                 .addResourceLocations(absoluteThumbnailsPath);
     }

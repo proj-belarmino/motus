@@ -4,9 +4,13 @@ import br.ufpb.motus.model.command.CommandResult;
 import br.ufpb.motus.model.media.FfprobeOutput;
 import br.ufpb.motus.model.movie.MediaMetadata;
 import br.ufpb.motus.services.command.CommandRunner;
+import br.ufpb.motus.services.log.Logger;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.jetbrains.annotations.Contract;
+import org.jspecify.annotations.NonNull;
 import org.springframework.stereotype.Service;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 @Service
@@ -18,9 +22,6 @@ public class MediaProbeService {
         this.objectMapper = objectMapper;
     }
 
-    /**
-     * Extracts deep metadata from a media file using FFprobe.
-     */
     public MediaMetadata probeFile(Path filePath) {
         CommandResult result = CommandRunner.command(
                 "ffprobe",
@@ -39,31 +40,46 @@ public class MediaProbeService {
         }
     }
 
-    /**
-     * Generates a JPEG thumbnail from the specified video at a given timestamp.
-     */
     public Path generateThumbnail(Path videoPath, Path outputDir, String timestampString) {
         String filename = videoPath.getFileName().toString() + "_thumb.jpg";
         Path outputPath = outputDir.resolve(filename);
 
+        try {
+            executeFfmpeg(videoPath, outputPath, timestampString);
+
+            // Check if file was successfully created. If not, the video might be shorter than the seek timestamp.
+            if (!Files.exists(outputPath) || Files.size(outputPath) == 0) {
+                Logger.warn("Thumbnail empty at %s seconds, retrying at 0", timestampString);
+                executeFfmpeg(videoPath, outputPath, "0");
+            }
+        } catch (Exception error) {
+            Logger.warn("Primary thumbnail generation failed for %s: %s", videoPath, error.getMessage());
+            try {
+                executeFfmpeg(videoPath, outputPath, "0");
+            } catch (Exception fallbackError) {
+                Logger.error("Total failure generating thumbnail for: %s", fallbackError, videoPath);
+                return null;
+            }
+        }
+
+        return Files.exists(outputPath) ? outputPath : null;
+    }
+
+    private void executeFfmpeg(@NonNull Path videoPath, @NonNull Path outputPath, String timestamp) {
         CommandRunner.command(
                 "ffmpeg",
                 "-y", // Overwrite if exists
-                "-ss", timestampString,
+                "-ss", timestamp, // Fast seek to timestamp
                 "-i", videoPath.toAbsolutePath().toString(),
-                "-vframes", "1",
+                "-vframes", "1", // Extract exactly 1 frame
                 "-q:v", "2", // High quality JPEG
                 outputPath.toAbsolutePath().toString()
         ).run();
-
-        return outputPath;
     }
 
-    private MediaMetadata mapToDomainMetadata(FfprobeOutput output) {
-        String videoCodec = "unknown";
-        String audioCodec = "unknown";
-        String resolution = "unknown";
-
+    @Contract("_ -> new")
+    private @NonNull MediaMetadata mapToDomainMetadata(@NonNull FfprobeOutput output) {
+        String videoCodec = "unknown", audioCodec = "unknown", resolution = "unknown";
         if (output.streams() != null) {
             for (FfprobeOutput.StreamInfo stream : output.streams()) {
                 if ("video".equals(stream.codecType())) {
@@ -77,33 +93,24 @@ public class MediaProbeService {
             }
         }
 
-        long bitrate = 0;
-        long fileSize = 0;
-        double durationSeconds = 0.0;
-
-        if (output.format() != null) {
-            bitrate = parseLongQuietly(output.format().bitRate());
-            fileSize = parseLongQuietly(output.format().size());
-            durationSeconds = parseDoubleQuietly(output.format().duration());
-        }
-
-        return new MediaMetadata(videoCodec, audioCodec, resolution, bitrate, fileSize, durationSeconds);
+        long bitrate = output.format() != null ? parseLongQuietly(output.format().bitRate()) : 0;
+        long fileSize = output.format() != null ? parseLongQuietly(output.format().size()) : 0;
+        double duration = output.format() != null ? parseDoubleQuietly(output.format().duration()) : 0.0;
+        return new MediaMetadata(videoCodec, audioCodec, resolution, bitrate, fileSize, duration);
     }
 
     private long parseLongQuietly(String value) {
-        if (value == null) return 0;
         try {
-            return Long.parseLong(value);
-        } catch (NumberFormatException ignored) {
+            return value != null ? Long.parseLong(value) : 0;
+        } catch (NumberFormatException e) {
             return 0;
         }
     }
 
     private double parseDoubleQuietly(String value) {
-        if (value == null) return 0.0;
         try {
-            return Double.parseDouble(value);
-        } catch (NumberFormatException ignored) {
+            return value != null ? Double.parseDouble(value) : 0.0;
+        } catch (NumberFormatException e) {
             return 0.0;
         }
     }

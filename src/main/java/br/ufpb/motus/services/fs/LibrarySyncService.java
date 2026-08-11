@@ -45,23 +45,15 @@ public class LibrarySyncService {
         this.metadataService = metadataService;
         this.libraryPath = libraryPath;
         this.thumbnailsPath = thumbnailsPath;
-
         ensureDirectories();
     }
 
     public void scanLibrary() {
         Logger.info("Starting full library scan at: %s", libraryPath);
-
         try (Stream<Path> paths = Files.walk(Paths.get(libraryPath))) {
             paths.filter(Files::isRegularFile)
                     .filter(this::isMediaFile)
-                    .forEach(path ->
-                            // Dispatch each file to an independent Virtual Thread.
-                            // Transforms a synchronous O(N) sequence of blocking operations into an asynchronous burst.
-                            TaskScheduler.submit(() -> processFileSafely(path)).queue()
-                    );
-
-            Logger.info("Library scan dispatched to background workers successfully.");
+                    .forEach(path -> TaskScheduler.submit(() -> processFileSafely(path)).queue());
         } catch (IOException error) {
             Logger.error("Failed to traverse library directory during scan.", error);
         }
@@ -71,26 +63,17 @@ public class LibrarySyncService {
     @Transactional
     public void handleFileSystemEvent(@NonNull FsEvent event) {
         Path path = Paths.get(event.path());
-
         switch (event.type()) {
             case CREATED -> {
-                if (isMediaFile(path)) {
-                    TaskScheduler.submit(() -> processFileSafely(path)).queue();
-                }
+                if (isMediaFile(path)) TaskScheduler.submit(() -> processFileSafely(path)).queue();
             }
             case DELETED -> removeFileRecord(path);
             case RENAMED -> {
-                if (event.oldPath() != null) {
-                    removeFileRecord(Paths.get(event.oldPath()));
-                }
-                if (isMediaFile(path)) {
-                    TaskScheduler.submit(() -> processFileSafely(path)).queue();
-                }
+                if (event.oldPath() != null) removeFileRecord(Paths.get(event.oldPath()));
+                if (isMediaFile(path)) TaskScheduler.submit(() -> processFileSafely(path)).queue();
             }
             case MODIFIED -> {
-                if (isMediaFile(path)) {
-                    TaskScheduler.submit(() -> processFileSafely(path)).queue();
-                }
+                if (isMediaFile(path)) TaskScheduler.submit(() -> processFileSafely(path)).queue();
             }
         }
     }
@@ -98,34 +81,27 @@ public class LibrarySyncService {
     private void processFileSafely(@NonNull Path filePath) {
         try {
             String pathString = filePath.toAbsolutePath().toString();
-
-            if (movieRepository.existsByFilePath(pathString)) {
-                Logger.trace("File already indexed, skipping: %s", filePath);
-                return;
-            }
-
-            Logger.info("Indexing new media file: %s", filePath);
+            if (movieRepository.existsByFilePath(pathString)) return;
 
             MediaMetadata mediaMetadata = probeService.probeFile(filePath);
 
-            double thumbTimestamp = mediaMetadata.durationSeconds() > 0 ? mediaMetadata.durationSeconds() * 0.1 : 5.0;
-            Path thumbnailPath = probeService.generateThumbnail(filePath, Paths.get(thumbnailsPath), String.valueOf((int) thumbTimestamp));
+            int thumbTimestamp = 0;
+            if (mediaMetadata.durationSeconds() > 5) {
+                thumbTimestamp = 5;
+            } else if (mediaMetadata.durationSeconds() > 1) {
+                thumbTimestamp = 1;
+            }
+
+            Path thumbnailPath = probeService.generateThumbnail(filePath, Paths.get(thumbnailsPath), String.valueOf(thumbTimestamp));
 
             String filename = filePath.getFileName().toString();
             String cleanTitle = TitleExtractor.extractTitle(filename);
 
-            ExternalMovieInfo tmdbInfo = null;
-            try {
-                tmdbInfo = metadataService.fetchByTitle(cleanTitle).orElse(null);
-            } catch (Exception error) {
-                Logger.warn("Could not fetch TMDB metadata for '%s': %s", cleanTitle, error.getMessage());
-            }
+            ExternalMovieInfo tmdbInfo = metadataService.fetchByTitle(cleanTitle).orElse(null);
 
             MovieEntity entity = createEntity(filePath, mediaMetadata, thumbnailPath, cleanTitle, tmdbInfo);
             movieRepository.save(entity);
-
             Logger.info("Successfully indexed: %s", entity.getTitle());
-
         } catch (Exception error) {
             Logger.error("Failed to process file: %s", error, filePath);
         }
@@ -142,27 +118,28 @@ public class LibrarySyncService {
     private @NonNull MovieEntity createEntity(
             @NonNull Path filePath,
             @NonNull MediaMetadata mediaMetadata,
-            @NonNull Path thumbnailPath,
+            @Nullable Path thumbnailPath,
             @NonNull String fallbackTitle,
             @Nullable ExternalMovieInfo info) {
+
+        String localCoverStr = thumbnailPath != null ? thumbnailPath.toAbsolutePath().toString() : null;
 
         if (info != null) {
             MovieEntity entity = metadataService.toEntity(filePath, info);
             entity.setMetadata(mediaMetadata);
-            entity.setCoverPath(thumbnailPath.toAbsolutePath().toString());
+            if (entity.getCoverPath() == null && localCoverStr != null) {
+                entity.setCoverPath(localCoverStr);
+            }
             return entity;
         }
 
         return new MovieEntity(
                 UUID.randomUUID().toString(),
-                fallbackTitle,
-                fallbackTitle,
+                fallbackTitle, fallbackTitle,
                 filePath.toAbsolutePath().toString(),
-                null,
-                null,
-                java.util.Collections.emptyList(),
-                0.0,
-                thumbnailPath.toAbsolutePath().toString(),
+                null, null,
+                java.util.Collections.emptyList(), 0.0,
+                localCoverStr,
                 FileManager.calculateSha256(filePath),
                 mediaMetadata
         );
