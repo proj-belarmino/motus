@@ -2,7 +2,7 @@
 
 Este projeto consiste em um serviço web de streaming de mídia de baixa latência.
 O objetivo principal é organizar bibliotecas de mídia e servir arquivos
-remotamente, oferecendo reprodução de vídeos, músicas e imagens, além de
+remotamente, oferecendo reprodução de vídeos, além de
 download de arquivos independentemente do seu tamanho.
 
 ---
