@@ -7,13 +7,6 @@ download de arquivos independentemente do seu tamanho.
 
 ---
 
-## Onde a Aplicação é Servida
-
-* **Endereço Público (Produção):** [https://pasteldemiolos.xyz](https://pasteldemiolos.xyz) *(Roteado via Cloudflare Tunnel)*
-* **Endereço Local (Desenvolvimento):** `http://localhost:3000`
-
----
-
 ## Funcionalidades Principais
 O sistema permite o cadastro de uma ou mais bibliotecas locais contendo
 arquivos de mídia.
@@ -51,14 +44,12 @@ da mídia utilizando serviços externos.
 
 ---
 
-## Como Rodar o Projeto (Containerizado)
+## Como Rodar o Projeto (Docker)
 
-A aplicação é containerizada utilizando **Docker Compose** (PostgreSQL, Backend Spring Boot e Frontend React/Nginx) e exposta publicamente através de um **Tunnel do Cloudflare**.
+A aplicação é containerizada utilizando **Docker Compose** (PostgreSQL, Backend Spring Boot e Frontend React/Nginx).
 
 ### 1. Pré-requisitos
-Certifique-se de ter instalado na máquina hospedeira:
-* Docker e Docker Compose
-* CLI do Cloudflare (`cloudflared`)
+Certifique-se de ter instalado no host o Docker e o Docker Compose.
 
 Crie as pastas de armazenamento e garanta as permissões de leitura e escrita:
 ```bash
@@ -66,7 +57,7 @@ mkdir -p media shows thumbnails avatars subtitles
 sudo chmod -R 777 media shows thumbnails avatars subtitles
 ```
 
-### 2. Subir a Aplicação com Docker
+### 2. Hostear a Aplicação com Docker
 Construa e inicie os containers da aplicação:
 ```bash
 docker compose up -d --build
@@ -80,7 +71,7 @@ A aplicação estará acessível localmente no endereço **`http://localhost:300
 
 Caso queira executar os serviços manualmente durante o desenvolvimento:
 
-* **Subir apenas o banco de dados (PostgreSQL):**
+* **Subir apenas o banco de dados:**
   ```bash
   docker compose up -d postgres
   ```
