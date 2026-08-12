@@ -9,6 +9,13 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import br.ufpb.motus.model.user.ActivityDay;
+import java.util.List;
+import br.ufpb.motus.model.movie.Movie;
 
 @RestController
 @RequestMapping("/api/user")
@@ -49,4 +56,18 @@ public class UserController {
             @RequestBody ProfileUpdateRequest request) {
         return ResponseEntity.ok(userService.updateProfile(userId, request));
     }
+
+    @PostMapping("/avatar")
+    public ResponseEntity<br.ufpb.motus.model.user.AuthResponse> updateAvatar(@AuthenticationPrincipal String userId, @RequestParam("file") MultipartFile file) { return ResponseEntity.ok(userService.updateAvatar(userId, file)); }
+
+    public record ActivityRequest(String movieId) {}
+
+    @PostMapping("/activity")
+    public ResponseEntity<Void> recordActivity(@AuthenticationPrincipal String userId, @RequestBody ActivityRequest request) { userService.recordActivity(userId, request.movieId()); return ResponseEntity.noContent().build(); }
+
+    @GetMapping("/activity")
+    public ResponseEntity<List<ActivityDay>> getActivity(@AuthenticationPrincipal String userId) { return ResponseEntity.ok(userService.getActivity(userId)); }
+
+    @GetMapping("/recent")
+    public ResponseEntity<List<Movie>> getRecentMovies(@AuthenticationPrincipal String userId) { return ResponseEntity.ok(userService.getRecentMovies(userId)); }
 }

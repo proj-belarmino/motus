@@ -40,7 +40,7 @@ public class AuthService {
                 request.email(),
                 fallbackName,
                 passwordEncoder.encode(request.password()),
-                "USER"
+                "USER", null
         );
         userRepository.save(user);
     }
@@ -55,7 +55,7 @@ public class AuthService {
         }
 
         String token = jwtService.generateToken(user);
-        AuthUserDto dto = new AuthUserDto(user.getId(), user.getEmail(), user.getName(), user.getRole());
+        AuthUserDto dto = new AuthUserDto(user.getId(), user.getEmail(), user.getName(), user.getRole(), user.getAvatarPath());
 
         return new AuthResponse(token, dto);
     }

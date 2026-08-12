@@ -12,9 +12,11 @@ import java.nio.file.Paths;
 public class WebResourceConfig implements WebMvcConfigurer {
 
     private final String thumbnailsPath;
+    private final String avatarsPath;
 
-    public WebResourceConfig(@Value("${motus.fs.thumbnails.path:./thumbnails}") String thumbnailsPath) {
+    public WebResourceConfig(@Value("${motus.fs.thumbnails.path:./thumbnails}") String thumbnailsPath, @Value("${motus.fs.avatars.path:./avatars}") String avatarsPath) {
         this.thumbnailsPath = thumbnailsPath;
+        this.avatarsPath = avatarsPath;
     }
 
     @Override
@@ -27,5 +29,7 @@ public class WebResourceConfig implements WebMvcConfigurer {
 
         registry.addResourceHandler("/api/thumbnails/**")
                 .addResourceLocations(absoluteThumbnailsPath);
+        String absoluteAvatarsPath = Paths.get(avatarsPath).toAbsolutePath().toUri().toString();
+        registry.addResourceHandler("/api/avatars/**").addResourceLocations(absoluteAvatarsPath.endsWith("/") ? absoluteAvatarsPath : absoluteAvatarsPath + "/");
     }
 }

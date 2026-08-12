@@ -4,5 +4,6 @@ public record AuthUserDto(
         String id,
         String email,
         String name,
-        String role
+        String role,
+        String avatarPath
 ) {}

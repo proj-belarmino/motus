@@ -32,4 +32,7 @@ public class UserEntity {
 
     @Column(name = "role", nullable = false)
     private String role;
+
+    @Column(name = "avatar_path")
+    private String avatarPath;
 }
