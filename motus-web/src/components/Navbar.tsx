@@ -20,9 +20,14 @@ import SyncModal from "./SyncModal";
 interface NavbarProps {
   onSearch: (term: string) => void;
   onScan: () => void | Promise<void>;
+  showSearch?: boolean;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onSearch, onScan }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  onSearch,
+  onScan,
+  showSearch = true,
+}) => {
   const { logout, user } = useAuth();
   const api = useApi();
   const navigate = useNavigate();
@@ -95,19 +100,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearch, onScan }) => {
           >
             NycoFlix
           </button>
-          <div className="relative hidden min-w-0 flex-1 justify-center sm:flex">
-            <div className="relative w-full max-w-xs lg:max-w-sm xl:max-w-md">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-              <input
-                type="search"
-                placeholder="Search your library"
-                value={searchTerm}
-                onChange={(event) => setSearchTerm(event.target.value)}
-                onFocus={openSearch}
-                className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20"
-              />
+          {showSearch && (
+            <div className="relative hidden min-w-0 flex-1 justify-center sm:flex">
+              <div className="relative w-full max-w-xs lg:max-w-sm xl:max-w-md">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+                <input
+                  type="search"
+                  placeholder="Search your library"
+                  value={searchTerm}
+                  onChange={(event) => setSearchTerm(event.target.value)}
+                  onFocus={openSearch}
+                  className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20"
+                />
+              </div>
             </div>
-          </div>
+          )}
           <div className="relative hidden md:block">
             <button
               onClick={() => setProfileMenuOpen((open) => !open)}
@@ -179,17 +186,19 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearch, onScan }) => {
             )}
           </button>
         </div>
-        <div className="relative mt-3 sm:hidden">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-          <input
-            type="search"
-            placeholder="Search your library"
-            value={searchTerm}
-            onChange={(event) => setSearchTerm(event.target.value)}
-            onFocus={openSearch}
-            className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
-          />
-        </div>
+        {showSearch && (
+          <div className="relative mt-3 sm:hidden">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+            <input
+              type="search"
+              placeholder="Search your library"
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              onFocus={openSearch}
+              className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
+        )}
         {mobileMenuOpen && (
           <div className="animate-rise-in mx-auto mt-3 max-w-7xl border-t border-border pt-3 md:hidden">
             <div className="mb-2 flex items-center gap-3 rounded-xl bg-background p-3">

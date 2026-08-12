@@ -38,8 +38,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: Film,
       path: "/movies",
       active: location.pathname === "/movies",
-      disabled: true,
-      badge: "Soon",
+      disabled: false,
     },
     {
       id: "tv",
@@ -142,16 +141,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 {item.label}
               </span>
 
-              {item.badge && isExpanded && (
-                <span className="ml-auto rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-primary">
-                  {item.badge}
-                </span>
-              )}
-
               {/* Tooltip for collapsed state */}
               {!isExpanded && (
                 <div className="pointer-events-none absolute left-16 z-50 ml-2 hidden rounded-lg border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-foreground shadow-xl group-hover:block whitespace-nowrap">
-                  {item.label} {item.disabled && "(Coming Soon)"}
+                  {item.label}
                 </div>
               )}
             </button>

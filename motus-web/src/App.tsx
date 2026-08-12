@@ -17,6 +17,7 @@ const NotificationsPage = React.lazy(
 );
 const FavoritesPage = React.lazy(() => import("./pages/FavoritesPage"));
 const WatchlistPage = React.lazy(() => import("./pages/WatchlistPage"));
+const MoviesPage = React.lazy(() => import("./pages/MoviesPage"));
 const ShowsPage = React.lazy(() => import("./pages/ShowsPage"));
 const ShowDetailPage = React.lazy(() => import("./pages/ShowDetailPage"));
 
@@ -45,6 +46,7 @@ export const App: React.FC = () => {
                   <Route path="/watch/episode/:id" element={<WatchPage />} />
                   <Route path="/favorites" element={<FavoritesPage />} />
                   <Route path="/watchlist" element={<WatchlistPage />} />
+                  <Route path="/movies" element={<MoviesPage />} />
                   <Route path="/shows" element={<ShowsPage />} />
                   <Route path="/shows/:id" element={<ShowDetailPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
