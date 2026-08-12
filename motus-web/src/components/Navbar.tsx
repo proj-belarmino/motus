@@ -96,18 +96,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearch, onScan }) => {
             NycoFlix
           </button>
           <div className="relative hidden min-w-0 flex-1 justify-center sm:flex">
-              <div className="relative w-full max-w-xs lg:max-w-sm xl:max-w-md">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-                <input
-                  type="search"
-                  placeholder="Search your library"
-                  value={searchTerm}
-                  onChange={(event) => setSearchTerm(event.target.value)}
-                  onFocus={openSearch}
-                  className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20"
-                />
-              </div>
+            <div className="relative w-full max-w-xs lg:max-w-sm xl:max-w-md">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+              <input
+                type="search"
+                placeholder="Search your library"
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                onFocus={openSearch}
+                className="w-full rounded-xl border border-border bg-background py-2.5 pl-10 pr-4 text-sm text-foreground outline-none transition placeholder:text-muted focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
             </div>
+          </div>
           <div className="relative hidden md:block">
             <button
               onClick={() => setProfileMenuOpen((open) => !open)}

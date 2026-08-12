@@ -234,7 +234,10 @@ export default function HomePage() {
           >
             <MovieRail>
               {recentlyAdded.slice(0, ROW_LIMIT).map((movie) => (
-                <div key={movie.id} className="w-36 shrink-0 snap-start sm:w-44 lg:w-48">
+                <div
+                  key={movie.id}
+                  className="w-36 shrink-0 snap-start sm:w-44 lg:w-48"
+                >
                   <MovieCard
                     movie={movie}
                     onClick={() => setSelectedMovie(movie)}
@@ -254,7 +257,10 @@ export default function HomePage() {
           >
             <MovieRail>
               {topRated.slice(0, ROW_LIMIT).map((movie) => (
-                <div key={movie.id} className="w-36 shrink-0 snap-start sm:w-44 lg:w-48">
+                <div
+                  key={movie.id}
+                  className="w-36 shrink-0 snap-start sm:w-44 lg:w-48"
+                >
                   <MovieCard
                     movie={movie}
                     onClick={() => setSelectedMovie(movie)}
