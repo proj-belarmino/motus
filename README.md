@@ -1,9 +1,16 @@
-# Media Streaming Server
+# Media Streaming Server (NycoFlix)
 
-Este projeto consiste em um web serviço de streaming de mídia de baixa latência.
+Este projeto consiste em um serviço web de streaming de mídia de baixa latência.
 O objetivo principal é organizar bibliotecas de mídia e servir arquivos
 remotamente, oferecendo reprodução de vídeos, músicas e imagens, além de
 download de arquivos independentemente do seu tamanho.
+
+---
+
+## Onde a Aplicação é Servida
+
+* **Endereço Público (Produção):** [https://pasteldemiolos.xyz](https://pasteldemiolos.xyz) *(Roteado via Cloudflare Tunnel)*
+* **Endereço Local (Desenvolvimento):** `http://localhost:3000`
 
 ---
 
@@ -32,7 +39,6 @@ streaming HTTP.
 * **Transcodificação:** Quando necessário, vídeos podem ser convertidos para
   formatos compatíveis durante a reprodução.
 
-
 ### Metadados
 
 Após a indexação, o sistema pode complementar automaticamente as informações
@@ -43,39 +49,40 @@ da mídia utilizando serviços externos.
 * **Cache:** Os metadados obtidos são armazenados localmente para evitar
   consultas repetidas.
 
-### Miniaturas
+---
 
-O sistema gera miniaturas automaticamente para facilitar a navegação pela
-biblioteca.
+## Como Rodar o Projeto (Containerizado)
 
-* **Vídeos:** Captura de um quadro representativo.
-* **Imagens:** Redimensionamento para visualização rápida.
-* **Fila de processamento:** A geração ocorre em segundo plano para não
-  bloquear outras operações.
+A aplicação é containerizada utilizando **Docker Compose** (PostgreSQL, Backend Spring Boot e Frontend React/Nginx) e exposta publicamente através de um **Tunnel do Cloudflare**.
 
-### Busca
+### 1. Pré-requisitos
+Certifique-se de ter instalado na máquina hospedeira:
+* Docker e Docker Compose
+* CLI do Cloudflare (`cloudflared`)
 
-Os usuários podem localizar rapidamente qualquer conteúdo da biblioteca.
+Crie as pastas de armazenamento e garanta as permissões de leitura e escrita:
+```bash
+mkdir -p media shows thumbnails avatars subtitles
+sudo chmod -R 777 media shows thumbnails avatars subtitles
+```
 
-* Busca por título.
-* Busca por gênero.
-* Busca por ator ou diretor.
-* Filtros por resolução, ano, duração e tipo de mídia.
+### 2. Subir a Aplicação com Docker
+Construa e inicie os containers da aplicação:
+```bash
+docker compose up -d --build
+```
+
+A aplicação estará acessível localmente no endereço **`http://localhost:3000`**.
 
 ---
 
-## Como Rodar o Projeto
+## Desenvolvimento Local sem Docker (Opcional)
 
-Instruções rápidas para inicialização local da aplicação e do banco:
+Caso queira executar os serviços manualmente durante o desenvolvimento:
 
-* **Subir os serviços (Docker):**
+* **Subir apenas o banco de dados (PostgreSQL):**
   ```bash
-  docker compose up -d
-  ```
- 
-* **Compilar o projeto e executar as migrações:**
-  ```bash
-  mvn clean compile
+  docker compose up -d postgres
   ```
 
 * **Executar os testes unitários:**
@@ -83,12 +90,15 @@ Instruções rápidas para inicialização local da aplicação e do banco:
   mvn test
   ```
 
-* **Iniciar a aplicação:**
+* **Iniciar o Backend (Spring Boot):**
   ```bash
   mvn spring-boot:run
   ```
 
-  Na pasta ./motus-web:
+* **Iniciar o Frontend (React / Vite):**
   ```bash
+  cd motus-web
+  npm install
   npm run dev
-  ````
+  ```
+```
