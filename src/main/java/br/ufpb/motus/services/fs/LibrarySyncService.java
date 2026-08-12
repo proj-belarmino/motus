@@ -130,6 +130,7 @@ public class LibrarySyncService {
             if (entity.getCoverPath() == null && localCoverStr != null) {
                 entity.setCoverPath(localCoverStr);
             }
+            entity.setAddedAt(java.time.Instant.ofEpochMilli(filePath.toFile().lastModified()));
             return entity;
         }
 
@@ -142,7 +143,8 @@ public class LibrarySyncService {
                 localCoverStr,
                 FileManager.calculateSha256(filePath),
                 mediaMetadata,
-                java.util.Collections.emptyList()
+                java.util.Collections.emptyList(),
+                java.time.Instant.ofEpochMilli(filePath.toFile().lastModified())
         );
     }
 

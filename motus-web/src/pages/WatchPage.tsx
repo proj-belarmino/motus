@@ -17,7 +17,7 @@ import {
   VolumeX,
 } from "lucide-react";
 import { useApi } from "../context/ApiContext";
-import { Movie } from "../types";
+import { Episode, Movie } from "../types";
 
 const SKIP_SECONDS = 10;
 
@@ -39,12 +39,20 @@ export default function WatchPage() {
   const location = useLocation();
   const api = useApi();
   const isEpisode = location.pathname.startsWith("/watch/episode/");
+  const [movie, setMovie] = useState<Movie | null>(null);
+  const episode = movie && isEpisode ? (movie as unknown as Episode) : null;
+  const nowPlayingLabel = episode
+    ? `S${String(episode.season_number).padStart(2, "0")}E${String(
+        episode.episode_number,
+      ).padStart(2, "0")}${episode.title ? ` · ${episode.title}` : ""}`
+    : isEpisode
+      ? "Now playing"
+      : movie?.title || "Now playing";
   const playerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsTimeout = useRef<number | null>(null);
   const activityRecorded = useRef(false);
   const subtitleTrackRefs = useRef<Map<string, HTMLTrackElement>>(new Map());
-  const [movie, setMovie] = useState<Movie | null>(null);
   const [activeSubtitleId, setActiveSubtitleId] = useState<string | null>(null);
   const [transcode, setTranscode] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -86,11 +94,18 @@ export default function WatchPage() {
   );
 
   useEffect(() => {
-    if (!id || isEpisode) return;
-    api
-      .getMovie(id)
-      .then(setMovie)
-      .catch(() => undefined);
+    if (!id) return;
+    if (isEpisode) {
+      api
+        .getEpisode(id)
+        .then((episode) => setMovie(episode as unknown as Movie))
+        .catch(() => undefined);
+    } else {
+      api
+        .getMovie(id)
+        .then(setMovie)
+        .catch(() => undefined);
+    }
   }, [id, api, isEpisode]);
 
   useEffect(() => {
@@ -202,7 +217,7 @@ export default function WatchPage() {
         onPlay={() => {
           setIsPlaying(true);
           revealControls();
-          if (!activityRecorded.current && !isEpisode) {
+          if (!activityRecorded.current) {
             activityRecorded.current = true;
             void api.recordActivity(id).catch(() => undefined);
           }
@@ -259,7 +274,7 @@ export default function WatchPage() {
           <ArrowLeft className="h-5 w-5" />
         </button>
         <div className="rounded-full border border-white/10 bg-black/35 px-4 py-2 text-sm font-medium tracking-wide shadow-lg backdrop-blur-md">
-          Now playing
+          {nowPlayingLabel}
         </div>
         <button
           onClick={() => setShowSettings((open) => !open)}

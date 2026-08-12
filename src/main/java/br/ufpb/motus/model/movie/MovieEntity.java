@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -61,4 +62,7 @@ public class MovieEntity {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "subtitles", columnDefinition = "jsonb")
     private List<Subtitle> subtitles = new ArrayList<>();
+
+    @Column(name = "added_at")
+    private Instant addedAt;
 }

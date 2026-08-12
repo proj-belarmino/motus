@@ -22,12 +22,11 @@ services:
       SPRING_DATASOURCE_USERNAME: usuario-usuario
       SPRING_DATASOURCE_PASSWORD: amominhavida
     volumes:
-      # Bind mounts for media libraries (stored on host machine)
-      - ./media:/app/media
-      - ./shows:/app/shows
-      - ./thumbnails:/app/thumbnails
-      - ./avatars:/app/avatars
-      - ./subtitles:/app/subtitles
+      - motus_media:/app/media
+      - motus_shows:/app/shows
+      - motus_thumbnails:/app/thumbnails
+      - motus_avatars:/app/avatars
+      - motus_subtitles:/app/subtitles
     depends_on:
       - postgres
     restart: unless-stopped
@@ -42,7 +41,7 @@ services:
         - VITE_API_URL=https://pasteldemiolos.xyz
     container_name: motus-frontend
     ports:
-      - "3000:80" # Exposed to host so cloudflared can proxy it
+      - "3000:80" 
     depends_on:
       - backend
     restart: unless-stopped
@@ -55,3 +54,8 @@ networks:
 
 volumes:
   postgres_data:
+  motus_media:
+  motus_shows:
+  motus_thumbnails:
+  motus_avatars:
+  motus_subtitles:

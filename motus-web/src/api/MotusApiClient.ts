@@ -1,6 +1,14 @@
 import { axiosInstance, API_BASE_URL } from "./axiosInstance";
 import { ApiClient } from "./ApiClient";
-import { Movie, Page, SearchQuery, Show, ShowSearchResult } from "../types";
+import {
+  Episode,
+  Movie,
+  NextUpItem,
+  Page,
+  SearchQuery,
+  Show,
+  ShowSearchResult,
+} from "../types";
 import { TokenService } from "../services/TokenService";
 
 export interface AuthResponse {
@@ -53,6 +61,13 @@ export class MotusApiClient implements ApiClient {
   }
   async getRecentMovies(): Promise<Movie[]> {
     return (await axiosInstance.get<Movie[]>("/api/user/recent")).data;
+  }
+  async getNextUp(limit: number = 12): Promise<NextUpItem[]> {
+    return (
+      await axiosInstance.get<NextUpItem[]>("/api/user/next-up", {
+        params: { limit },
+      })
+    ).data;
   }
   getAvatarUrl(path: string): string {
     return `${API_BASE_URL}/api/avatars/${encodeURIComponent(path)}`;
@@ -113,6 +128,9 @@ export class MotusApiClient implements ApiClient {
   }
   async getShow(id: string): Promise<Show> {
     return (await axiosInstance.get<Show>(`/api/shows/${id}`)).data;
+  }
+  async getEpisode(id: string): Promise<Episode> {
+    return (await axiosInstance.get<Episode>(`/api/shows/episodes/${id}`)).data;
   }
   async deleteShow(id: string): Promise<void> {
     await axiosInstance.delete(`/api/shows/${id}`);

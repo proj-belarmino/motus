@@ -27,6 +27,12 @@ export interface Movie {
   file_hash?: string;
   metadata: MediaMetadata;
   subtitles?: Subtitle[];
+  added_at?: string;
+}
+
+export interface NextUpItem {
+  show: Show;
+  episode: Episode;
 }
 
 export interface Page<T> {
@@ -48,6 +54,7 @@ export interface SearchQuery {
   sortOrder?: "ASC" | "DESC";
   page?: number;
   size?: number;
+  addedSince?: string;
 }
 
 export interface Episode {

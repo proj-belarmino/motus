@@ -1,5 +1,6 @@
 package br.ufpb.motus.controllers;
 
+import br.ufpb.motus.model.show.Episode;
 import br.ufpb.motus.model.show.Show;
 import br.ufpb.motus.model.show.ShowSearchResult;
 import br.ufpb.motus.services.show.ShowService;
@@ -46,6 +47,11 @@ public class ShowController {
     @GetMapping("/{id}")
     public ResponseEntity<Show> getShow(@PathVariable String id) {
         return ResponseEntity.ok(showService.getShow(id));
+    }
+
+    @GetMapping("/episodes/{episodeId}")
+    public ResponseEntity<Episode> getEpisode(@PathVariable String episodeId) {
+        return ResponseEntity.ok(showService.getEpisode(episodeId));
     }
 
     @DeleteMapping("/{id}")

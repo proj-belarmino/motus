@@ -42,12 +42,22 @@ public class MovieController {
             @RequestParam(required = false) Integer year,
             @RequestParam(required = false) String director,
             @RequestParam(required = false) Double minRating,
+            @RequestParam(required = false) String addedSince,
             @RequestParam(defaultValue = "title") String sortBy,
             @RequestParam(defaultValue = "ASC") String sortOrder,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        SearchQuery query = new SearchQuery(title, genre, year, director, minRating, sortBy, sortOrder, page, size);
+        java.time.LocalDate since = null;
+        if (addedSince != null && !addedSince.isBlank()) {
+            try {
+                since = java.time.LocalDate.parse(addedSince);
+            } catch (java.time.format.DateTimeParseException ignored) {
+                since = null;
+            }
+        }
+
+        SearchQuery query = new SearchQuery(title, genre, year, director, minRating, sortBy, sortOrder, page, size, since);
         Page<Movie> results = movieService.searchMovies(query);
 
         return ResponseEntity.ok(results);

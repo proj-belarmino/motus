@@ -18,12 +18,21 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import br.ufpb.motus.model.movie.Movie;
 import br.ufpb.motus.model.movie.MovieEntity;
+import br.ufpb.motus.model.show.Episode;
+import br.ufpb.motus.model.show.EpisodeEntity;
+import br.ufpb.motus.model.show.Show;
+import br.ufpb.motus.model.user.NextUpItem;
 import br.ufpb.motus.services.movie.MovieRepository;
+import br.ufpb.motus.services.show.EpisodeRepository;
+import br.ufpb.motus.services.show.ShowRepository;
 
 @Service
 public class UserService {
@@ -36,8 +45,10 @@ public class UserService {
     private final UserWatchlistRepository userWatchlistRepository;
     private final Path avatarsPath;
     private final MovieRepository movieRepository;
+    private final EpisodeRepository episodeRepository;
+    private final ShowRepository showRepository;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, br.ufpb.motus.services.security.JwtService jwtService, UserActivityRepository userActivityRepository, UserFavoriteRepository userFavoriteRepository, UserWatchlistRepository userWatchlistRepository, MovieRepository movieRepository, @org.springframework.beans.factory.annotation.Value("${motus.fs.avatars.path:./avatars}") String avatarsPath) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, br.ufpb.motus.services.security.JwtService jwtService, UserActivityRepository userActivityRepository, UserFavoriteRepository userFavoriteRepository, UserWatchlistRepository userWatchlistRepository, MovieRepository movieRepository, EpisodeRepository episodeRepository, ShowRepository showRepository, @org.springframework.beans.factory.annotation.Value("${motus.fs.avatars.path:./avatars}") String avatarsPath) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -46,6 +57,8 @@ public class UserService {
         this.userWatchlistRepository = userWatchlistRepository;
         this.avatarsPath = Path.of(avatarsPath).toAbsolutePath().normalize();
         this.movieRepository = movieRepository;
+        this.episodeRepository = episodeRepository;
+        this.showRepository = showRepository;
     }
 
     @Transactional
@@ -129,7 +142,11 @@ public class UserService {
 
     @Transactional
     public void recordActivity(String userId, String movieId) {
-        if (movieId == null || !movieRepository.existsById(movieId)) throw new ResourceNotFoundException("Movie", movieId);
+        boolean isMovie = movieId != null && movieRepository.existsById(movieId);
+        boolean isEpisode = movieId != null && episodeRepository.existsById(movieId);
+        if (!isMovie && !isEpisode) {
+            throw new ResourceNotFoundException("Media", movieId);
+        }
         userActivityRepository.save(new br.ufpb.motus.model.user.UserActivityEntity(userId, LocalDate.now(), movieId));
     }
 
@@ -141,6 +158,74 @@ public class UserService {
         List<String> ids = userActivityRepository.findRecentMovieIds(userId, 12);
         Map<String, MovieEntity> movies = movieRepository.findAllById(ids).stream().collect(java.util.stream.Collectors.toMap(MovieEntity::getId, Function.identity()));
         return ids.stream().map(movies::get).filter(java.util.Objects::nonNull).map(Movie::fromEntity).toList();
+    }
+
+    /**
+     * Computes the "next up" episode for each show the user is actively watching,
+     * ordered by how recently they watched it. A show is included only while the
+     * user has watched at least one episode and still has episodes remaining, so
+     * the result is empty until there is watch activity.
+     */
+    @Transactional(readOnly = true)
+    public List<NextUpItem> getNextUp(String userId, int limit) {
+        Set<String> watchedEpisodeIds = new HashSet<>();
+        userActivityRepository.findLatestEpisodeActivity(userId, 500)
+                .forEach(row -> watchedEpisodeIds.add(String.valueOf(row[0])));
+
+        if (watchedEpisodeIds.isEmpty()) {
+            return List.of();
+        }
+
+        Set<String> watchedShowIds = new java.util.LinkedHashSet<>();
+        Set<String> processedShows = new HashSet<>();
+        for (String episodeId : watchedEpisodeIds) {
+            episodeRepository.findById(episodeId).ifPresent(episode -> {
+                if (processedShows.add(episode.getShowId())) {
+                    watchedShowIds.add(episode.getShowId());
+                }
+            });
+        }
+
+        List<NextUpItem> results = new ArrayList<>();
+        for (String showId : watchedShowIds) {
+            List<EpisodeEntity> episodes = episodeRepository.findByShowIdOrderBySeasonNumberAscEpisodeNumberAsc(showId);
+            if (episodes.isEmpty()) continue;
+
+            boolean allWatched = true;
+            int latestWatchedIndex = -1;
+            for (int i = 0; i < episodes.size(); i++) {
+                if (watchedEpisodeIds.contains(episodes.get(i).getId())) {
+                    latestWatchedIndex = i;
+                } else {
+                    allWatched = false;
+                }
+            }
+
+            if (allWatched || latestWatchedIndex < 0) {
+                continue;
+            }
+
+            EpisodeEntity nextEpisode = null;
+            for (int i = latestWatchedIndex + 1; i < episodes.size(); i++) {
+                if (!watchedEpisodeIds.contains(episodes.get(i).getId())) {
+                    nextEpisode = episodes.get(i);
+                    break;
+                }
+            }
+            if (nextEpisode == null) {
+                continue;
+            }
+
+            var show = showRepository.findById(showId).orElse(null);
+            if (show == null) continue;
+
+            results.add(new NextUpItem(
+                    Show.fromEntity(show, episodes),
+                    Episode.fromEntity(nextEpisode)
+            ));
+        }
+
+        return results.stream().limit(Math.max(1, limit)).toList();
     }
 
     @Transactional

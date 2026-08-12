@@ -263,6 +263,13 @@ public class ShowService {
         return Episode.fromEntity(entity);
     }
 
+    @Transactional(readOnly = true)
+    public @NonNull Episode getEpisode(@NonNull String episodeId) {
+        EpisodeEntity entity = episodeRepository.findById(episodeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Episode", episodeId));
+        return Episode.fromEntity(entity);
+    }
+
     private String sanitizeFilename(String filename) {
         if (filename == null || filename.isBlank()) {
             return "episode_" + System.currentTimeMillis() + ".mp4";

@@ -15,6 +15,8 @@ import br.ufpb.motus.services.tasks.TaskScheduler;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -32,6 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -80,6 +83,9 @@ public class MovieService {
 
         Sort.Direction direction = Sort.Direction.fromString(query.sortOrder() != null ? query.sortOrder() : "ASC");
         String sortBy = query.sortBy() != null ? query.sortBy() : "title";
+        if ("addedAt".equalsIgnoreCase(sortBy)) {
+            sortBy = "addedAt";
+        }
 
         Pageable pageable = PageRequest.of(query.page(), query.size(), Sort.by(direction, sortBy));
 
@@ -130,6 +136,30 @@ public class MovieService {
     }
 
     /**
+     * Backfills the added timestamp for legacy movies using the media file's
+     * last-modified time, so "recently added" rows are populated after upgrades.
+     */
+    @EventListener(ApplicationReadyEvent.class)
+    @Transactional
+    public void backfillAddedAt() {
+        List<MovieEntity> legacy = repository.findAll().stream()
+                .filter(entity -> entity.getAddedAt() == null)
+                .toList();
+        int updated = 0;
+        for (MovieEntity entity : legacy) {
+            Path filePath = Paths.get(entity.getFilePath());
+            if (Files.isRegularFile(filePath)) {
+                entity.setAddedAt(Instant.ofEpochMilli(filePath.toFile().lastModified()));
+                repository.save(entity);
+                updated++;
+            }
+        }
+        if (updated > 0) {
+            Logger.info("backfilled added_at for %d movie(s)", updated);
+        }
+    }
+
+    /**
      * asynchronously triggers a complete filesystem parity scan.
      */
     public void triggerBackgroundScan() {
@@ -153,6 +183,10 @@ public class MovieService {
         Path filePath = Paths.get(entity.getFilePath());
         if (!Files.exists(filePath)) {
             throw new ResourceNotFoundException("File", filePath.toString());
+        }
+
+        if (entity.getAddedAt() == null) {
+            entity.setAddedAt(Instant.ofEpochMilli(filePath.toFile().lastModified()));
         }
 
         MediaMetadata mediaMetadata = probeService.probeFile(filePath);

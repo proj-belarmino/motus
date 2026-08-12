@@ -9,5 +9,6 @@ public record SearchQuery(
     String sortBy,
     String sortOrder,
     int page,
-    int size
+    int size,
+    java.time.LocalDate addedSince
 ) {}

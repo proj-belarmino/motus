@@ -91,7 +91,8 @@ public class MovieMetadataService {
                 info.coverUrl(),
                 FileManager.calculateSha256(filePath),
                 null,
-                List.of()
+                List.of(),
+                java.time.Instant.ofEpochMilli(filePath.toFile().lastModified())
         );
     }
 

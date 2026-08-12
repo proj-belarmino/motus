@@ -72,6 +72,13 @@ public class UserController {
     @GetMapping("/recent")
     public ResponseEntity<List<Movie>> getRecentMovies(@AuthenticationPrincipal String userId) { return ResponseEntity.ok(userService.getRecentMovies(userId)); }
 
+    @GetMapping("/next-up")
+    public ResponseEntity<List<br.ufpb.motus.model.user.NextUpItem>> getNextUp(
+            @AuthenticationPrincipal String userId,
+            @RequestParam(defaultValue = "12") int limit) {
+        return ResponseEntity.ok(userService.getNextUp(userId, limit));
+    }
+
     public record FavoriteRequest(String movieId) {}
     public record FavoriteResponse(boolean favorited) {}
     public record WatchlistRequest(String movieId) {}

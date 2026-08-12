@@ -1,4 +1,4 @@
-import { Movie, Page, SearchQuery, Show, ShowSearchResult } from "../types";
+import { Episode, Movie, NextUpItem, Page, SearchQuery, Show, ShowSearchResult } from "../types";
 import { User } from "../services/TokenService";
 
 export interface ApiClient {
@@ -35,6 +35,7 @@ export interface ApiClient {
   getActivity(): Promise<Array<{ date: string; count: number }>>;
   recordActivity(movieId: string): Promise<void>;
   getRecentMovies(): Promise<Movie[]>;
+  getNextUp(limit?: number): Promise<NextUpItem[]>;
   getAvatarUrl(path: string): string;
   toggleFavorite(movieId: string): Promise<boolean>;
   getFavorites(): Promise<Movie[]>;
@@ -46,6 +47,7 @@ export interface ApiClient {
   createShow(title: string, tmdbId?: number): Promise<Show>;
   getShows(): Promise<Show[]>;
   getShow(id: string): Promise<Show>;
+  getEpisode(id: string): Promise<Episode>;
   deleteShow(id: string): Promise<void>;
   uploadEpisode(
     showId: string,

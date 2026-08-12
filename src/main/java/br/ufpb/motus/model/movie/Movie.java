@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.NonNull;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +25,8 @@ public record Movie(
         @JsonProperty("cover_path") String coverPath,
         @JsonProperty("file_hash") String fileHash,
         @JsonProperty("metadata") MediaMetadata metadata,
-        @JsonProperty("subtitles") List<Subtitle> subtitles
+        @JsonProperty("subtitles") List<Subtitle> subtitles,
+        @JsonProperty("added_at") Instant addedAt
 ) {
 
     @Contract("_ -> new")
@@ -41,7 +43,8 @@ public record Movie(
                 entity.getCoverPath(),
                 entity.getFileHash(),
                 entity.getMetadata(),
-                entity.getSubtitles() != null ? entity.getSubtitles() : new ArrayList<>()
+                entity.getSubtitles() != null ? entity.getSubtitles() : new ArrayList<>(),
+                entity.getAddedAt()
         );
     }
 
@@ -59,7 +62,8 @@ public record Movie(
                 this.coverPath(),
                 this.fileHash(),
                 this.metadata(),
-                this.subtitles() != null ? this.subtitles() : new ArrayList<>()
+                this.subtitles() != null ? this.subtitles() : new ArrayList<>(),
+                this.addedAt()
         );
     }
 }

@@ -31,6 +31,9 @@ final class MovieFilter {
         if (query.minRating() != null) {
             spec = spec.and(byRating(query.minRating()));
         }
+        if (query.addedSince() != null) {
+            spec = spec.and(byAddedSince(query.addedSince()));
+        }
 
         return spec;
     }
@@ -65,5 +68,12 @@ final class MovieFilter {
 
     private @NonNull Specification<MovieEntity> byRating(double star) {
         return (root, criteriaQuery, cb) -> cb.greaterThanOrEqualTo(root.get("rating"), star);
+    }
+
+    private @NonNull Specification<MovieEntity> byAddedSince(java.time.LocalDate since) {
+        return (root, criteriaQuery, cb) -> cb.greaterThanOrEqualTo(
+                root.get("addedAt"),
+                since.atStartOfDay().toInstant(java.time.ZoneOffset.UTC)
+        );
     }
 }
