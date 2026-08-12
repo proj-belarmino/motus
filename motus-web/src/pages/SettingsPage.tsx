@@ -7,15 +7,20 @@ import { useApi } from "../context/ApiContext";
 import { TokenService } from "../services/TokenService";
 
 type ActivityDay = { date: string; count: number };
+type HeatmapDay = { key: string; count: number };
 const activityLevels = ["bg-emerald-500/10", "bg-emerald-500/35", "bg-emerald-500/60", "bg-emerald-400"];
 
 function ActivityHeatmap({ activity }: { activity: ActivityDay[] }) {
-  const { days, total } = useMemo(() => {
+  const { weeks, total } = useMemo(() => {
     const counts = new Map(activity.map((entry) => [entry.date, entry.count]));
-    const result = Array.from({ length: 364 }, (_, index) => { const date = new Date(); date.setDate(date.getDate() - (363 - index)); const key = date.toISOString().slice(0, 10); return { key, count: counts.get(key) || 0 }; });
-    return { days: result, total: activity.reduce((sum, entry) => sum + entry.count, 0) };
+    const days: HeatmapDay[] = Array.from({ length: 364 }, (_, index) => { const date = new Date(); date.setDate(date.getDate() - (363 - index)); const key = date.toISOString().slice(0, 10); return { key, count: counts.get(key) || 0 }; });
+    const buckets: HeatmapDay[][] = [];
+    for (let index = 0; index < days.length; index += 7) {
+      buckets.push(days.slice(index, index + 7));
+    }
+    return { weeks: buckets, total: activity.reduce((sum, entry) => sum + entry.count, 0) };
   }, [activity]);
-  return <section className="rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-6"><div className="mb-5 flex flex-wrap items-start justify-between gap-2"><div><p className="text-lg font-bold">Watching activity</p><p className="mt-1 text-sm text-muted">{total ? `${total} play ${total === 1 ? "session" : "sessions"} in the past year` : "Your viewing moments will appear here."}</p></div><span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">Last 12 months</span></div><div className="overflow-x-auto pb-2"><div className="grid w-max grid-flow-col grid-rows-7 gap-1">{days.map((day) => <div key={day.key} title={`${day.key}: ${day.count} play ${day.count === 1 ? "session" : "sessions"}`} className={`h-3 w-3 rounded-sm sm:h-3.5 sm:w-3.5 ${day.count === 0 ? "bg-surface-hover" : activityLevels[Math.min(day.count, 4) - 1]}`} />)}</div></div><div className="mt-3 flex items-center justify-end gap-1 text-xs text-muted"><span>Less</span>{activityLevels.map((level) => <i key={level} className={`h-3 w-3 rounded-sm ${level}`} />)}<span>More</span></div></section>;
+  return <section className="rounded-2xl border border-border bg-surface p-5 shadow-sm sm:p-6"><div className="mb-5 flex flex-wrap items-start justify-between gap-2"><div><p className="text-lg font-bold">Watching activity</p><p className="mt-1 text-sm text-muted">{total ? `${total} play ${total === 1 ? "session" : "sessions"} in the past year` : "Your viewing moments will appear here."}</p></div><span className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">Last 12 months</span></div><div className="flex gap-1">{weeks.map((week, weekIndex) => <div key={weekIndex} className="flex flex-1 flex-col gap-1">{week.map((day) => <div key={day.key} title={`${day.key}: ${day.count} play ${day.count === 1 ? "session" : "sessions"}`} className={`aspect-square w-full rounded-sm ${day.count === 0 ? "bg-surface-hover" : activityLevels[Math.min(day.count, 4) - 1]}`} />)}</div>)}</div><div className="mt-3 flex items-center justify-end gap-1 text-xs text-muted"><span>Less</span>{activityLevels.map((level) => <i key={level} className={`h-3 w-3 rounded-sm ${level}`} />)}<span>More</span></div></section>;
 }
 
 export default function SettingsPage() {
