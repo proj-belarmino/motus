@@ -1,5 +1,5 @@
-const TOKEN_KEY = 'nyco_jwt';
-const USER_KEY = 'nyco_user';
+const TOKEN_KEY = "nyco_jwt";
+const USER_KEY = "nyco_user";
 
 export interface User {
   id: string;

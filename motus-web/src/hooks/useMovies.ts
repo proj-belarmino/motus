@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useApi } from '../context/ApiContext';
-import { Movie, Page, SearchQuery } from '../types';
-import { ApiClient } from '../api/ApiClient';
+import { useState, useEffect, useCallback } from "react";
+import { useApi } from "../context/ApiContext";
+import { Movie, Page, SearchQuery } from "../types";
+import { ApiClient } from "../api/ApiClient";
 
 const pageCache = new Map<string, Page<Movie>>();
 
@@ -16,7 +16,9 @@ export const warmMovies = async (api: Pick<ApiClient, "getMovies">) => {
   }
 };
 
-export const useMovies = (initialQuery: SearchQuery = { page: 0, size: 20 }) => {
+export const useMovies = (
+  initialQuery: SearchQuery = { page: 0, size: 20 },
+) => {
   const api = useApi();
   const [data, setData] = useState<Page<Movie> | null>(() => {
     return pageCache.get(cacheKey(initialQuery)) ?? null;
@@ -35,7 +37,7 @@ export const useMovies = (initialQuery: SearchQuery = { page: 0, size: 20 }) => 
       setData(result);
       setError(null);
     } catch {
-      setError('Failed to fetch movies');
+      setError("Failed to fetch movies");
     } finally {
       setLoading(false);
     }
@@ -55,5 +57,13 @@ export const useMovies = (initialQuery: SearchQuery = { page: 0, size: 20 }) => 
     await api.triggerScan();
   };
 
-  return { data, loading, error, query, updateSearch, triggerScan, refresh: fetchMovies };
+  return {
+    data,
+    loading,
+    error,
+    query,
+    updateSearch,
+    triggerScan,
+    refresh: fetchMovies,
+  };
 };

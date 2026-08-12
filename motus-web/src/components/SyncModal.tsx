@@ -15,7 +15,9 @@ export default function SyncModal({ onConfirm, onClose }: SyncModalProps) {
     >
       <div className="animate-rise-in w-full max-w-md overflow-hidden rounded-xl border border-border bg-surface shadow-2xl">
         <div className="flex items-center justify-between border-b border-border p-4">
-          <h2 className="text-xl font-bold text-foreground">Sync your library?</h2>
+          <h2 className="text-xl font-bold text-foreground">
+            Sync your library?
+          </h2>
           <button
             onClick={onClose}
             className="rounded-full p-2 text-muted transition hover:bg-surface-hover hover:text-foreground"

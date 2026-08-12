@@ -1,5 +1,5 @@
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Shield } from 'lucide-react';
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Shield } from "lucide-react";
 
 export default function PrivacyPage() {
   const navigate = useNavigate();
@@ -20,7 +20,8 @@ export default function PrivacyPage() {
           <Shield className="h-16 w-16 text-primary mb-4" />
           <h2 className="mb-2 text-2xl font-semibold">Nyco ama dados</h2>
           <p className="text-muted max-w-md">
-            Mas Nyco sabe que dados não devem ser consumidos indiscriminadamente.
+            Mas Nyco sabe que dados não devem ser consumidos
+            indiscriminadamente.
           </p>
         </div>
       </main>

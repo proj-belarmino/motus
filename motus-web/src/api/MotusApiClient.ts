@@ -37,38 +37,110 @@ export class MotusApiClient implements ApiClient {
   async uploadAvatar(file: File): Promise<AuthResponse> {
     const formData = new FormData();
     formData.append("file", file);
-    const response = await axiosInstance.post<AuthResponse>("/api/user/avatar", formData, { headers: { "Content-Type": "multipart/form-data" } });
+    const response = await axiosInstance.post<AuthResponse>(
+      "/api/user/avatar",
+      formData,
+      { headers: { "Content-Type": "multipart/form-data" } },
+    );
     return response.data;
   }
 
-  async getActivity(): Promise<Array<{ date: string; count: number }>> { return (await axiosInstance.get("/api/user/activity")).data; }
-  async recordActivity(movieId: string): Promise<void> { await axiosInstance.post("/api/user/activity", { movieId }); }
-  async getRecentMovies(): Promise<Movie[]> { return (await axiosInstance.get<Movie[]>("/api/user/recent")).data; }
-  getAvatarUrl(path: string): string { return `${API_BASE_URL}/api/avatars/${encodeURIComponent(path)}`; }
+  async getActivity(): Promise<Array<{ date: string; count: number }>> {
+    return (await axiosInstance.get("/api/user/activity")).data;
+  }
+  async recordActivity(movieId: string): Promise<void> {
+    await axiosInstance.post("/api/user/activity", { movieId });
+  }
+  async getRecentMovies(): Promise<Movie[]> {
+    return (await axiosInstance.get<Movie[]>("/api/user/recent")).data;
+  }
+  getAvatarUrl(path: string): string {
+    return `${API_BASE_URL}/api/avatars/${encodeURIComponent(path)}`;
+  }
 
-  async toggleFavorite(movieId: string): Promise<boolean> { return (await axiosInstance.post<{ favorited: boolean }>("/api/user/favorites/toggle", { movieId })).data.favorited; }
-  async getFavorites(): Promise<Movie[]> { return (await axiosInstance.get<Movie[]>("/api/user/favorites")).data; }
-  async isFavorite(movieId: string): Promise<boolean> { return (await axiosInstance.get<{ favorited: boolean }>("/api/user/favorites/is-favorite", { params: { movieId } })).data.favorited; }
-  async toggleWatchlist(movieId: string): Promise<boolean> { return (await axiosInstance.post<{ inWatchlist: boolean }>("/api/user/watchlist/toggle", { movieId })).data.inWatchlist; }
-  async getWatchlist(): Promise<Movie[]> { return (await axiosInstance.get<Movie[]>("/api/user/watchlist")).data; }
-  async isInWatchlist(movieId: string): Promise<boolean> { return (await axiosInstance.get<{ inWatchlist: boolean }>("/api/user/watchlist/is-on-watchlist", { params: { movieId } })).data.inWatchlist; }
+  async toggleFavorite(movieId: string): Promise<boolean> {
+    return (
+      await axiosInstance.post<{ favorited: boolean }>(
+        "/api/user/favorites/toggle",
+        { movieId },
+      )
+    ).data.favorited;
+  }
+  async getFavorites(): Promise<Movie[]> {
+    return (await axiosInstance.get<Movie[]>("/api/user/favorites")).data;
+  }
+  async isFavorite(movieId: string): Promise<boolean> {
+    return (
+      await axiosInstance.get<{ favorited: boolean }>(
+        "/api/user/favorites/is-favorite",
+        { params: { movieId } },
+      )
+    ).data.favorited;
+  }
+  async toggleWatchlist(movieId: string): Promise<boolean> {
+    return (
+      await axiosInstance.post<{ inWatchlist: boolean }>(
+        "/api/user/watchlist/toggle",
+        { movieId },
+      )
+    ).data.inWatchlist;
+  }
+  async getWatchlist(): Promise<Movie[]> {
+    return (await axiosInstance.get<Movie[]>("/api/user/watchlist")).data;
+  }
+  async isInWatchlist(movieId: string): Promise<boolean> {
+    return (
+      await axiosInstance.get<{ inWatchlist: boolean }>(
+        "/api/user/watchlist/is-on-watchlist",
+        { params: { movieId } },
+      )
+    ).data.inWatchlist;
+  }
 
-  async searchShows(query: string): Promise<ShowSearchResult[]> { return (await axiosInstance.get<ShowSearchResult[]>("/api/shows/search", { params: { q: query } })).data; }
-  async createShow(title: string, tmdbId?: number): Promise<Show> { return (await axiosInstance.post<Show>("/api/shows", { title, tmdbId })).data; }
-  async getShows(): Promise<Show[]> { return (await axiosInstance.get<Show[]>("/api/shows")).data; }
-  async getShow(id: string): Promise<Show> { return (await axiosInstance.get<Show>(`/api/shows/${id}`)).data; }
-  async deleteShow(id: string): Promise<void> { await axiosInstance.delete(`/api/shows/${id}`); }
-  async uploadEpisode(showId: string, file: File, season?: number, episode?: number): Promise<Show> {
+  async searchShows(query: string): Promise<ShowSearchResult[]> {
+    return (
+      await axiosInstance.get<ShowSearchResult[]>("/api/shows/search", {
+        params: { q: query },
+      })
+    ).data;
+  }
+  async createShow(title: string, tmdbId?: number): Promise<Show> {
+    return (await axiosInstance.post<Show>("/api/shows", { title, tmdbId }))
+      .data;
+  }
+  async getShows(): Promise<Show[]> {
+    return (await axiosInstance.get<Show[]>("/api/shows")).data;
+  }
+  async getShow(id: string): Promise<Show> {
+    return (await axiosInstance.get<Show>(`/api/shows/${id}`)).data;
+  }
+  async deleteShow(id: string): Promise<void> {
+    await axiosInstance.delete(`/api/shows/${id}`);
+  }
+  async uploadEpisode(
+    showId: string,
+    file: File,
+    season?: number,
+    episode?: number,
+  ): Promise<Show> {
     const formData = new FormData();
     formData.append("file", file);
-    const response = await axiosInstance.post<Show>(`/api/shows/${showId}/episodes`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-      params: { season, episode },
-    });
+    const response = await axiosInstance.post<Show>(
+      `/api/shows/${showId}/episodes`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        params: { season, episode },
+      },
+    );
     return response.data;
   }
   async deleteEpisode(showId: string, episodeId: string): Promise<Show> {
-    return (await axiosInstance.delete<Show>(`/api/shows/${showId}/episodes/${episodeId}`)).data;
+    return (
+      await axiosInstance.delete<Show>(
+        `/api/shows/${showId}/episodes/${episodeId}`,
+      )
+    ).data;
   }
   getEpisodeStreamUrl(episodeId: string): string {
     const token = TokenService.getToken();
@@ -100,12 +172,16 @@ export class MotusApiClient implements ApiClient {
   }
 
   async updateMovieTitle(id: string, title: string): Promise<Movie> {
-    const response = await axiosInstance.put<Movie>(`/api/movies/${id}/title`, { title });
+    const response = await axiosInstance.put<Movie>(`/api/movies/${id}/title`, {
+      title,
+    });
     return response.data;
   }
 
   async refreshMovie(id: string): Promise<Movie> {
-    const response = await axiosInstance.post<Movie>(`/api/movies/${id}/refresh`);
+    const response = await axiosInstance.post<Movie>(
+      `/api/movies/${id}/refresh`,
+    );
     return response.data;
   }
 

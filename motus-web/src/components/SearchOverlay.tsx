@@ -224,7 +224,10 @@ function SearchResultRow({
 }) {
   const api = useApi();
   const [imgError, setImgError] = useState(false);
-  const coverUrl = movie.cover_path && !imgError ? api.getThumbnailUrl(movie.cover_path) : null;
+  const coverUrl =
+    movie.cover_path && !imgError
+      ? api.getThumbnailUrl(movie.cover_path)
+      : null;
   const year = movie.release_date ? movie.release_date.split("-")[0] : "New";
   const resolution = movie.metadata?.resolution || "HD";
 

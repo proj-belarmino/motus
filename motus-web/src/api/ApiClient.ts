@@ -2,7 +2,9 @@ import { Movie, Page, SearchQuery, Show, ShowSearchResult } from "../types";
 import { User } from "../services/TokenService";
 
 export interface ApiClient {
-  login(credentials: Record<string, string>): Promise<{ token: string; user: User }>;
+  login(
+    credentials: Record<string, string>,
+  ): Promise<{ token: string; user: User }>;
   register(data: Record<string, string>): Promise<void>;
   getMovies(query: SearchQuery): Promise<Page<Movie>>;
   getMovie(id: string): Promise<Movie>;
@@ -16,7 +18,11 @@ export interface ApiClient {
     file: File,
     onProgress?: (percent: number) => void,
   ): Promise<void>;
-  uploadSubtitle(movieId: string, file: File, language?: string): Promise<Movie>;
+  uploadSubtitle(
+    movieId: string,
+    file: File,
+    language?: string,
+  ): Promise<Movie>;
   deleteSubtitle(movieId: string, subtitleId: string): Promise<Movie>;
   getSubtitleUrl(movieId: string, subtitleId: string): string;
   updateProfile(data: {
@@ -41,7 +47,12 @@ export interface ApiClient {
   getShows(): Promise<Show[]>;
   getShow(id: string): Promise<Show>;
   deleteShow(id: string): Promise<void>;
-  uploadEpisode(showId: string, file: File, season?: number, episode?: number): Promise<Show>;
+  uploadEpisode(
+    showId: string,
+    file: File,
+    season?: number,
+    episode?: number,
+  ): Promise<Show>;
   deleteEpisode(showId: string, episodeId: string): Promise<Show>;
   getEpisodeStreamUrl(episodeId: string): string;
 }

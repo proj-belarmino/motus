@@ -12,7 +12,9 @@ export const warmCollection = async (
   try {
     collectionCache.set(
       kind,
-      kind === "favorites" ? await api.getFavorites() : await api.getWatchlist(),
+      kind === "favorites"
+        ? await api.getFavorites()
+        : await api.getWatchlist(),
     );
   } catch {
     // Prefetching is best-effort; pages fetch on their own if it fails.
@@ -29,7 +31,9 @@ export const usePersonalCollection = (kind: "favorites" | "watchlist") => {
   const load = useCallback(async () => {
     try {
       const result =
-        kind === "favorites" ? await api.getFavorites() : await api.getWatchlist();
+        kind === "favorites"
+          ? await api.getFavorites()
+          : await api.getWatchlist();
       collectionCache.set(kind, result);
       setItems(result);
       setError("");

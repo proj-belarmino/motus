@@ -16,7 +16,10 @@ interface SidebarProps {
   setIsExpanded: (expanded: boolean) => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isExpanded, setIsExpanded }) => {
+export const Sidebar: React.FC<SidebarProps> = ({
+  isExpanded,
+  setIsExpanded,
+}) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -88,7 +91,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isExpanded, setIsExpanded }) =
         onClick={() => {
           const nextExpanded = !isExpanded;
           setIsExpanded(nextExpanded);
-          localStorage.setItem("sidebar-expanded", JSON.stringify(nextExpanded));
+          localStorage.setItem(
+            "sidebar-expanded",
+            JSON.stringify(nextExpanded),
+          );
         }}
         className="absolute -right-3 top-24 flex h-6 w-6 items-center justify-center rounded-full border border-border bg-surface text-foreground shadow-md transition-transform hover:scale-105 hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
         aria-label={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
@@ -112,8 +118,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isExpanded, setIsExpanded }) =
                 item.active
                   ? "bg-primary text-white shadow-lg shadow-primary/10"
                   : item.disabled
-                  ? "text-muted/40 cursor-not-allowed"
-                  : "text-foreground hover:bg-surface-hover hover:text-foreground cursor-pointer"
+                    ? "text-muted/40 cursor-not-allowed"
+                    : "text-foreground hover:bg-surface-hover hover:text-foreground cursor-pointer"
               }`}
             >
               <Icon
@@ -121,8 +127,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isExpanded, setIsExpanded }) =
                   item.active
                     ? "text-white"
                     : item.disabled
-                    ? "text-muted/30"
-                    : "text-primary group-hover:text-primary-hover"
+                      ? "text-muted/30"
+                      : "text-primary group-hover:text-primary-hover"
                 }`}
               />
 
