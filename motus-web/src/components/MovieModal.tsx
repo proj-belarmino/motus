@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { X, Play, HardDrive, Film, FileVideo, RefreshCw, Edit2, Check, AlertTriangle, Trash2, LoaderCircle, Captions, Upload } from "lucide-react";
+import { X, Play, HardDrive, Film, FileVideo, RefreshCw, Edit2, Check, AlertTriangle, Trash2, LoaderCircle, Captions, Upload, Heart, Bookmark } from "lucide-react";
 import { Movie } from "../types";
 import { useApi } from "../context/ApiContext";
 
@@ -32,6 +32,28 @@ export default function MovieModal({
   const [subtitleError, setSubtitleError] = useState("");
   const [removingSubtitleId, setRemovingSubtitleId] = useState("");
   const subtitleFileInput = useRef<HTMLInputElement>(null);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isWatchlisted, setIsWatchlisted] = useState(false);
+  const [savingBookmark, setSavingBookmark] = useState<"favorite" | "watchlist" | null>(null);
+
+  useEffect(() => {
+    void Promise.all([api.isFavorite(movie.id), api.isInWatchlist(movie.id)])
+      .then(([favorited, watchlisted]) => { setIsFavorite(favorited); setIsWatchlisted(watchlisted); })
+      .catch(() => undefined);
+  }, [api, movie.id]);
+
+  const toggleBookmark = async (kind: "favorite" | "watchlist") => {
+    setSavingBookmark(kind);
+    try {
+      const value = kind === "favorite" ? await api.toggleFavorite(movie.id) : await api.toggleWatchlist(movie.id);
+      if (kind === "favorite") setIsFavorite(value);
+      else setIsWatchlisted(value);
+    } catch {
+      // Ignore toggle failures; state stays unchanged.
+    } finally {
+      setSavingBookmark(null);
+    }
+  };
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -191,6 +213,24 @@ export default function MovieModal({
             >
               <Play className="h-6 w-6 fill-white" />
               <span>Play</span>
+            </button>
+            <button
+              onClick={() => void toggleBookmark("favorite")}
+              disabled={savingBookmark !== null}
+              title={isFavorite ? "Remove from favourites" : "Add to favourites"}
+              aria-label={isFavorite ? "Remove from favourites" : "Add to favourites"}
+              className={`flex h-11 w-11 items-center justify-center rounded-xl border backdrop-blur-md shadow-lg transition hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-white disabled:cursor-wait disabled:opacity-60 ${isFavorite ? "border-primary bg-primary text-white" : "border-white/25 bg-black/40 text-white hover:bg-primary"}`}
+            >
+              {savingBookmark === "favorite" ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <Heart className={`h-5 w-5 ${isFavorite ? "fill-current" : ""}`} />}
+            </button>
+            <button
+              onClick={() => void toggleBookmark("watchlist")}
+              disabled={savingBookmark !== null}
+              title={isWatchlisted ? "Remove from watchlist" : "Add to watchlist"}
+              aria-label={isWatchlisted ? "Remove from watchlist" : "Add to watchlist"}
+              className={`flex h-11 w-11 items-center justify-center rounded-xl border backdrop-blur-md shadow-lg transition hover:scale-[1.03] focus:outline-none focus:ring-2 focus:ring-white disabled:cursor-wait disabled:opacity-60 ${isWatchlisted ? "border-primary bg-primary text-white" : "border-white/25 bg-black/40 text-white hover:bg-primary"}`}
+            >
+              {savingBookmark === "watchlist" ? <LoaderCircle className="h-5 w-5 animate-spin" /> : <Bookmark className={`h-5 w-5 ${isWatchlisted ? "fill-current" : ""}`} />}
             </button>
           </div>
         </div>

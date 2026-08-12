@@ -46,6 +46,13 @@ export class MotusApiClient implements ApiClient {
   async getRecentMovies(): Promise<Movie[]> { return (await axiosInstance.get<Movie[]>("/api/user/recent")).data; }
   getAvatarUrl(path: string): string { return `${API_BASE_URL}/api/avatars/${encodeURIComponent(path)}`; }
 
+  async toggleFavorite(movieId: string): Promise<boolean> { return (await axiosInstance.post<{ favorited: boolean }>("/api/user/favorites/toggle", { movieId })).data.favorited; }
+  async getFavorites(): Promise<Movie[]> { return (await axiosInstance.get<Movie[]>("/api/user/favorites")).data; }
+  async isFavorite(movieId: string): Promise<boolean> { return (await axiosInstance.get<{ favorited: boolean }>("/api/user/favorites/is-favorite", { params: { movieId } })).data.favorited; }
+  async toggleWatchlist(movieId: string): Promise<boolean> { return (await axiosInstance.post<{ inWatchlist: boolean }>("/api/user/watchlist/toggle", { movieId })).data.inWatchlist; }
+  async getWatchlist(): Promise<Movie[]> { return (await axiosInstance.get<Movie[]>("/api/user/watchlist")).data; }
+  async isInWatchlist(movieId: string): Promise<boolean> { return (await axiosInstance.get<{ inWatchlist: boolean }>("/api/user/watchlist/is-on-watchlist", { params: { movieId } })).data.inWatchlist; }
+
   async getMovies(query: SearchQuery): Promise<Page<Movie>> {
     const response = await axiosInstance.get<Page<Movie>>("/api/movies", {
       params: query,

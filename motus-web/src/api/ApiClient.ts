@@ -30,4 +30,10 @@ export interface ApiClient {
   recordActivity(movieId: string): Promise<void>;
   getRecentMovies(): Promise<Movie[]>;
   getAvatarUrl(path: string): string;
+  toggleFavorite(movieId: string): Promise<boolean>;
+  getFavorites(): Promise<Movie[]>;
+  isFavorite(movieId: string): Promise<boolean>;
+  toggleWatchlist(movieId: string): Promise<boolean>;
+  getWatchlist(): Promise<Movie[]>;
+  isInWatchlist(movieId: string): Promise<boolean>;
 }
