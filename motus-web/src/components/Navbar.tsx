@@ -4,15 +4,18 @@ import {
   ChevronDown,
   LogOut,
   Menu,
+  Moon,
   RefreshCw,
   Search,
   Settings as SettingsIcon,
+  Sun,
   Upload,
   X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useApi } from "../context/ApiContext";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 import UploadModal from "./UploadModal";
 import SearchOverlay from "./SearchOverlay";
 import SyncModal from "./SyncModal";
@@ -26,6 +29,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearch, onScan }) => {
   const { logout, user } = useAuth();
   const api = useApi();
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
@@ -108,6 +112,18 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearch, onScan }) => {
               />
             </div>
           </div>
+          <button
+            onClick={toggleTheme}
+            className="hidden h-10 w-10 items-center justify-center rounded-xl border border-border text-foreground transition hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary/30 md:flex"
+            aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+            title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+          >
+            {theme === "dark" ? (
+              <Sun className="h-5 w-5" />
+            ) : (
+              <Moon className="h-5 w-5" />
+            )}
+          </button>
           <div className="relative hidden md:block">
             <button
               onClick={() => setProfileMenuOpen((open) => !open)}
@@ -204,6 +220,14 @@ export const Navbar: React.FC<NavbarProps> = ({ onSearch, onScan }) => {
               </span>
             </div>
             <div className="grid grid-cols-2 gap-2">
+              <button onClick={toggleTheme} className={menuItemClass}>
+                {theme === "dark" ? (
+                  <Sun className="h-4 w-4 text-primary" />
+                ) : (
+                  <Moon className="h-4 w-4 text-primary" />
+                )}
+                {theme === "dark" ? "Light mode" : "Dark mode"}
+              </button>
               <button onClick={openUpload} className={menuItemClass}>
                 <Upload className="h-4 w-4 text-primary" /> Upload
               </button>

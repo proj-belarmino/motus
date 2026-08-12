@@ -187,7 +187,7 @@ export default function ShowDetailPage() {
       </header>
 
       <main className="mx-auto max-w-7xl px-4 pb-14 pt-7 sm:px-8 sm:pt-9 lg:px-12">
-        <section className="relative isolate overflow-hidden rounded-2xl border border-border bg-[#101010] shadow-sm">
+        <section className="relative isolate overflow-hidden rounded-2xl border border-border bg-background shadow-sm dark:bg-[#101010]">
           {coverUrl && (
             <img
               src={coverUrl}
@@ -195,12 +195,12 @@ export default function ShowDetailPage() {
               onError={(event) => {
                 event.currentTarget.style.display = "none";
               }}
-              className="absolute inset-0 h-full w-full object-cover opacity-25"
+              className="absolute inset-0 h-full w-full object-cover opacity-20 dark:opacity-25"
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#080808] via-[#080808]/75 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/75 to-transparent dark:from-[#080808] dark:via-[#080808]/75 dark:to-transparent" />
           <div className="relative flex flex-col gap-5 p-5 sm:flex-row sm:items-end sm:p-8">
-            <div className="flex h-48 w-32 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-black/50 shadow-lg sm:h-60 sm:w-40">
+            <div className="flex h-48 w-32 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-surface shadow-lg sm:h-60 sm:w-40 dark:border-white/10 dark:bg-black/50">
               {coverUrl ? (
                 <img
                   src={coverUrl}
@@ -211,41 +211,41 @@ export default function ShowDetailPage() {
                   className="h-full w-full object-cover"
                 />
               ) : (
-                <Film className="h-10 w-10 text-white/30" />
+                <Film className="h-10 w-10 text-muted dark:text-white/30" />
               )}
             </div>
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-white/75">
+              <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted dark:text-white/75">
                 <span className="inline-flex items-center gap-1 text-amber-300">
                   <Star className="h-3.5 w-3.5 fill-current" />{" "}
                   {show.rating ? show.rating.toFixed(1) : "—"}
                 </span>
-                <span className="h-1 w-1 rounded-full bg-white/40" />
+                <span className="h-1 w-1 rounded-full bg-border dark:bg-white/40" />
                 <span>{year}</span>
                 {show.status && (
                   <>
-                    <span className="h-1 w-1 rounded-full bg-white/40" />
+                    <span className="h-1 w-1 rounded-full bg-border dark:bg-white/40" />
                     <span>{show.status}</span>
                   </>
                 )}
-                <span className="h-1 w-1 rounded-full bg-white/40" />
+                <span className="h-1 w-1 rounded-full bg-border dark:bg-white/40" />
                 <span>{show.episodes.length} episodes</span>
               </div>
-              <h2 className="mt-3 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              <h2 className="mt-3 text-3xl font-bold tracking-tight text-foreground dark:text-white sm:text-4xl">
                 {show.title}
               </h2>
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {show.genres.map((genre) => (
                   <span
                     key={genre}
-                    className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-semibold text-white/85 backdrop-blur-md"
+                    className="rounded-full bg-surface px-2.5 py-1 text-xs font-semibold text-foreground backdrop-blur-md dark:bg-white/10 dark:text-white/85"
                   >
                     {genre}
                   </span>
                 ))}
               </div>
               {show.overview && (
-                <p className="mt-4 max-w-2xl text-sm leading-6 text-white/75">
+                <p className="mt-4 max-w-2xl text-sm leading-6 text-muted dark:text-white/75">
                   {show.overview}
                 </p>
               )}

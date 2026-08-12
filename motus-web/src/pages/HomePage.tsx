@@ -112,62 +112,62 @@ export default function HomePage() {
       <Navbar onSearch={() => undefined} onScan={triggerScan} />
 
       {heroMovie && (
-        <section className="relative isolate min-h-[540px] max-h-[600px] overflow-hidden border-b border-border bg-[#101010] sm:min-h-[620px] lg:min-h-[680px]">
+        <section className="relative isolate min-h-[540px] max-h-[600px] overflow-hidden border-b border-border bg-background sm:min-h-[620px] lg:min-h-[680px] dark:bg-[#101010]">
           {!heroImgError && heroMovie.cover_path ? (
             <img
               src={api.getThumbnailUrl(heroMovie.cover_path)}
               alt=""
               onError={() => setHeroImgError(true)}
-              className="absolute inset-0 h-full w-full object-cover object-[center_25%] opacity-55"
+              className="absolute inset-0 h-full w-full object-cover object-[center_25%] opacity-40 dark:opacity-55"
             />
           ) : (
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_40%,#5f1318_0%,#171717_42%,#090909_85%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_75%_40%,#5f1318_0%,var(--color-surface-hover)_42%,var(--color-surface)_85%)] dark:bg-[radial-gradient(circle_at_75%_40%,#5f1318_0%,#171717_42%,#090909_85%)]" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#080808] via-[#080808]/80 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-black/35" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent dark:from-[#080808] dark:via-[#080808]/80 dark:to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent dark:via-transparent dark:to-black/35" />
           <div className="absolute -right-20 top-20 h-72 w-72 rounded-full bg-primary/20 blur-3xl" />
 
           <div className="relative mx-auto flex min-h-[540px] max-w-7xl items-end px-5 pb-14 pt-28 sm:min-h-[620px] sm:px-8 sm:pb-20 lg:min-h-[680px] lg:px-12">
             <div className="max-w-2xl">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-white/90 backdrop-blur-md">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-surface/80 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-foreground backdrop-blur-md dark:border-white/15 dark:bg-white/10 dark:text-white/90">
                 <Sparkles className="h-3.5 w-3.5 text-primary" /> Featured
                 tonight
               </div>
-              <h1 className="line-clamp-2 max-w-xl text-4xl font-bold tracking-[-0.035em] text-white drop-shadow-lg sm:text-5xl lg:text-7xl">
+              <h1 className="line-clamp-2 max-w-xl text-4xl font-bold tracking-[-0.035em] text-foreground dark:text-white sm:text-5xl lg:text-7xl">
                 {heroMovie.title}
               </h1>
-              <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm font-medium text-white/75 sm:text-base">
+              <div className="mt-5 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm font-medium text-muted dark:text-white/75 sm:text-base">
                 <span className="inline-flex items-center gap-1 text-amber-300">
                   <Star className="h-4 w-4 fill-current" />{" "}
                   {heroMovie.rating ? heroMovie.rating.toFixed(1) : "—"}
                 </span>
-                <span className="h-1 w-1 rounded-full bg-white/50" />
+                <span className="h-1 w-1 rounded-full bg-border dark:bg-white/50" />
                 <span>
                   {heroMovie.release_date?.split("-")[0] || "New release"}
                 </span>
-                <span className="h-1 w-1 rounded-full bg-white/50" />
+                <span className="h-1 w-1 rounded-full bg-border dark:bg-white/50" />
                 <span>{heroMovie.metadata?.resolution || "HD"}</span>
                 {heroMovie.genres?.[0] && (
                   <>
-                    <span className="h-1 w-1 rounded-full bg-white/50" />
+                    <span className="h-1 w-1 rounded-full bg-border dark:bg-white/50" />
                     <span>{heroMovie.genres[0]}</span>
                   </>
                 )}
               </div>
-              <p className="mt-5 max-w-lg text-sm leading-6 text-white/75 sm:text-base sm:leading-7">
+              <p className="mt-5 max-w-lg text-sm leading-6 text-muted dark:text-white/75 sm:text-base sm:leading-7">
                 Settle in for a great watch, streamed from your personal library
                 in {heroMovie.metadata?.resolution || "high definition"}.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <button
                   onClick={() => navigate(`/watch/${heroMovie.id}`)}
-                  className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-black shadow-xl transition hover:scale-[1.02] hover:bg-white/90 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-black sm:px-6 sm:text-base"
+                  className="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-bold text-white shadow-xl transition hover:scale-[1.02] hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background sm:px-6 sm:text-base dark:bg-white dark:text-black dark:focus:ring-white dark:focus:ring-offset-black"
                 >
                   <Play className="h-5 w-5 fill-current" /> Play now
                 </button>
                 <button
                   onClick={() => setSelectedMovie(heroMovie)}
-                  className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/10 px-5 py-3 text-sm font-bold text-white shadow-lg backdrop-blur-md transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white sm:px-6 sm:text-base"
+                  className="inline-flex items-center gap-2 rounded-xl border border-border bg-surface px-5 py-3 text-sm font-bold text-foreground shadow-lg backdrop-blur-md transition hover:bg-surface-hover focus:outline-none focus:ring-2 focus:ring-primary sm:px-6 sm:text-base dark:border-white/20 dark:bg-white/10 dark:text-white dark:focus:ring-white"
                 >
                   <Info className="h-5 w-5" /> Details
                 </button>

@@ -145,9 +145,11 @@ export default function SettingsPage() {
       </header>
       <main className="mx-auto max-w-4xl space-y-6 px-4 py-7 sm:px-6 sm:py-10">
         <section className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
-          <div className="bg-[radial-gradient(circle_at_80%_0%,rgba(229,9,20,.26),transparent_46%),linear-gradient(120deg,#171717,#232323)] px-5 pb-12 pt-6 sm:px-7">
-            <p className="text-sm font-medium text-white/65">Profile</p>
-            <h2 className="mt-1 text-2xl font-bold text-white">
+          <div className="bg-[linear-gradient(120deg,var(--color-surface-hover),var(--color-border))] px-5 pb-12 pt-6 sm:px-7 dark:bg-[radial-gradient(circle_at_80%_0%,rgba(229,9,20,.26),transparent_46%),linear-gradient(120deg,#171717,#232323)]">
+            <p className="text-sm font-medium text-muted dark:text-white/65">
+              Profile
+            </p>
+            <h2 className="mt-1 text-2xl font-bold text-foreground dark:text-white">
               Make NycoFlix yours
             </h2>
           </div>
