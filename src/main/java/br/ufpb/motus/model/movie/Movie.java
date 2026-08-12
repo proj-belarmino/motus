@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Contract;
 import org.jspecify.annotations.NonNull;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 public record Movie(
@@ -22,7 +23,8 @@ public record Movie(
         @JsonProperty("rating") double rating,
         @JsonProperty("cover_path") String coverPath,
         @JsonProperty("file_hash") String fileHash,
-        @JsonProperty("metadata") MediaMetadata metadata
+        @JsonProperty("metadata") MediaMetadata metadata,
+        @JsonProperty("subtitles") List<Subtitle> subtitles
 ) {
 
     @Contract("_ -> new")
@@ -38,7 +40,8 @@ public record Movie(
                 entity.getRating(),
                 entity.getCoverPath(),
                 entity.getFileHash(),
-                entity.getMetadata()
+                entity.getMetadata(),
+                entity.getSubtitles() != null ? entity.getSubtitles() : new ArrayList<>()
         );
     }
 
@@ -55,7 +58,8 @@ public record Movie(
                 this.rating(),
                 this.coverPath(),
                 this.fileHash(),
-                this.metadata()
+                this.metadata(),
+                this.subtitles() != null ? this.subtitles() : new ArrayList<>()
         );
     }
 }

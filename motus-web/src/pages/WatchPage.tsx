@@ -17,6 +17,7 @@ import {
   VolumeX,
 } from "lucide-react";
 import { useApi } from "../context/ApiContext";
+import { Movie } from "../types";
 
 const SKIP_SECONDS = 10;
 
@@ -40,6 +41,9 @@ export default function WatchPage() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsTimeout = useRef<number | null>(null);
   const activityRecorded = useRef(false);
+  const subtitleTrackRefs = useRef<Map<string, HTMLTrackElement>>(new Map());
+  const [movie, setMovie] = useState<Movie | null>(null);
+  const [activeSubtitleId, setActiveSubtitleId] = useState<string | null>(null);
   const [transcode, setTranscode] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -53,6 +57,31 @@ export default function WatchPage() {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const streamUrl = api.getStreamUrl(id ?? "", transcode);
+
+  const applySubtitleSelection = useCallback((video: HTMLVideoElement, subtitleId: string | null) => {
+    const tracks = video.textTracks;
+    for (let i = 0; i < tracks.length; i++) {
+      const track = tracks[i];
+      const target = subtitleId ? subtitleTrackRefs.current.get(subtitleId) : undefined;
+      track.mode = target && target.track === track ? "showing" : "disabled";
+    }
+  }, []);
+
+  const selectSubtitle = useCallback((subtitleId: string | null) => {
+    setActiveSubtitleId(subtitleId);
+    const video = videoRef.current;
+    if (video) applySubtitleSelection(video, subtitleId);
+  }, [applySubtitleSelection]);
+
+  useEffect(() => {
+    if (!id) return;
+    api.getMovie(id).then(setMovie).catch(() => undefined);
+  }, [id, api]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) applySubtitleSelection(video, activeSubtitleId);
+  }, [activeSubtitleId, movie, applySubtitleSelection]);
 
   const revealControls = useCallback(() => {
     setShowControls(true);
@@ -150,7 +179,11 @@ export default function WatchPage() {
         onPlay={() => { setIsPlaying(true); revealControls(); if (!activityRecorded.current) { activityRecorded.current = true; void api.recordActivity(id).catch(() => undefined); } }}
         onPause={() => { setIsPlaying(false); setShowControls(true); }}
         onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
-        onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)}
+        onLoadedMetadata={(event) => {
+          const video = event.currentTarget;
+          setDuration(video.duration);
+          applySubtitleSelection(video, activeSubtitleId);
+        }}
         onProgress={(event) => {
           const video = event.currentTarget;
           if (video.buffered.length) setBuffered(video.buffered.end(video.buffered.length - 1));
@@ -159,7 +192,21 @@ export default function WatchPage() {
           setVolume(event.currentTarget.volume);
           setIsMuted(event.currentTarget.muted);
         }}
-      />
+      >
+        {movie?.subtitles?.map((subtitle) => (
+          <track
+            key={subtitle.id}
+            ref={(element) => {
+              if (element) subtitleTrackRefs.current.set(subtitle.id, element);
+              else subtitleTrackRefs.current.delete(subtitle.id);
+            }}
+            kind="subtitles"
+            src={api.getSubtitleUrl(movie.id, subtitle.id)}
+            srcLang={subtitle.language}
+            label={subtitle.label}
+          />
+        ))}
+      </video>
 
       <div className={`pointer-events-none absolute inset-0 bg-gradient-to-b from-black/70 via-transparent to-black/85 transition-opacity duration-300 ${showControls ? "opacity-100" : "opacity-0"}`} />
 
@@ -217,8 +264,21 @@ export default function WatchPage() {
               ))}
             </div>
           </div>
-          <div className="mt-3 flex items-center gap-2 border-t border-white/10 px-2 pt-3 text-xs text-white/45">
-            <Captions className="h-4 w-4" /> Subtitles follow your browser settings
+          <div className="mt-3 border-t border-white/10 px-2 pt-3">
+            <span className="mb-2 flex items-center gap-2 text-white/70"><Captions className="h-4 w-4" /> Subtitles</span>
+            {movie?.subtitles?.length ? (
+              <div className="space-y-1">
+                <button onClick={() => selectSubtitle(null)} className={`w-full rounded-lg px-2 py-2 text-left text-xs font-medium transition ${activeSubtitleId === null ? "bg-primary text-white" : "bg-white/8 text-white/70 hover:bg-white/15"}`}>Off</button>
+                {movie.subtitles.map((subtitle) => (
+                  <button key={subtitle.id} onClick={() => selectSubtitle(subtitle.id)} className={`flex w-full items-center justify-between gap-2 rounded-lg px-2 py-2 text-left text-xs font-medium transition ${activeSubtitleId === subtitle.id ? "bg-primary text-white" : "bg-white/8 text-white/70 hover:bg-white/15"}`}>
+                    <span className="truncate">{subtitle.label}</span>
+                    <span className="shrink-0 rounded bg-white/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider">{subtitle.language}</span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-white/45">No subtitles attached to this title.</p>
+            )}
           </div>
         </section>
       )}

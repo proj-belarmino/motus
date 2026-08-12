@@ -5,6 +5,7 @@ export interface ApiClient {
   login(credentials: Record<string, string>): Promise<{ token: string; user: User }>;
   register(data: Record<string, string>): Promise<void>;
   getMovies(query: SearchQuery): Promise<Page<Movie>>;
+  getMovie(id: string): Promise<Movie>;
   deleteMovie(id: string): Promise<void>;
   triggerScan(): Promise<void>;
   getThumbnailUrl(coverPath: string): string;
@@ -15,6 +16,9 @@ export interface ApiClient {
     file: File,
     onProgress?: (percent: number) => void,
   ): Promise<void>;
+  uploadSubtitle(movieId: string, file: File, language?: string): Promise<Movie>;
+  deleteSubtitle(movieId: string, subtitleId: string): Promise<Movie>;
+  getSubtitleUrl(movieId: string, subtitleId: string): string;
   updateProfile(data: {
     name?: string;
     email?: string;

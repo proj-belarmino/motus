@@ -90,7 +90,8 @@ public class MovieMetadataService {
                 info.rating(),
                 info.coverUrl(),
                 FileManager.calculateSha256(filePath),
-                null
+                null,
+                List.of()
         );
     }
 

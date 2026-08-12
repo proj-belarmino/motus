@@ -7,6 +7,13 @@ export interface MediaMetadata {
   durationSeconds: number;
 }
 
+export interface Subtitle {
+  id: string;
+  language: string;
+  label: string;
+  file_path: string;
+}
+
 export interface Movie {
   id: string;
   title: string;
@@ -19,6 +26,7 @@ export interface Movie {
   cover_path?: string;
   file_hash?: string;
   metadata: MediaMetadata;
+  subtitles?: Subtitle[];
 }
 
 export interface Page<T> {

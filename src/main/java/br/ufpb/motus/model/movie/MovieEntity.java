@@ -57,4 +57,8 @@ public class MovieEntity {
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "metadata", columnDefinition = "jsonb")
     private MediaMetadata metadata;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "subtitles", columnDefinition = "jsonb")
+    private List<Subtitle> subtitles = new ArrayList<>();
 }

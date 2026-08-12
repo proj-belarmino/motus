@@ -141,7 +141,8 @@ public class LibrarySyncService {
                 java.util.Collections.emptyList(), 0.0,
                 localCoverStr,
                 FileManager.calculateSha256(filePath),
-                mediaMetadata
+                mediaMetadata,
+                java.util.Collections.emptyList()
         );
     }
 

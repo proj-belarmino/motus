@@ -53,6 +53,11 @@ export class MotusApiClient implements ApiClient {
     return response.data;
   }
 
+  async getMovie(id: string): Promise<Movie> {
+    const response = await axiosInstance.get<Movie>(`/api/movies/${id}`);
+    return response.data;
+  }
+
   async deleteMovie(id: string): Promise<void> {
     await axiosInstance.delete(`/api/movies/${id}`);
   }
@@ -69,6 +74,42 @@ export class MotusApiClient implements ApiClient {
   async refreshMovie(id: string): Promise<Movie> {
     const response = await axiosInstance.post<Movie>(`/api/movies/${id}/refresh`);
     return response.data;
+  }
+
+  async uploadSubtitle(
+    movieId: string,
+    file: File,
+    language?: string,
+  ): Promise<Movie> {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await axiosInstance.post<Movie>(
+      `/api/movies/${movieId}/subtitles`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+        params: language ? { language } : undefined,
+      },
+    );
+    return response.data;
+  }
+
+  async deleteSubtitle(movieId: string, subtitleId: string): Promise<Movie> {
+    const response = await axiosInstance.delete<Movie>(
+      `/api/movies/${movieId}/subtitles/${subtitleId}`,
+    );
+    return response.data;
+  }
+
+  getSubtitleUrl(movieId: string, subtitleId: string): string {
+    const token = TokenService.getToken();
+    const url = new URL(
+      `${API_BASE_URL}/api/movies/${movieId}/subtitles/${subtitleId}/file`,
+    );
+    if (token) {
+      url.searchParams.append("token", token);
+    }
+    return url.toString();
   }
 
   async uploadMovie(
