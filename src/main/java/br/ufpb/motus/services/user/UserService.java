@@ -86,6 +86,13 @@ public class UserService {
             user.setName(request.name());
         }
 
+        if (request.handle() != null && !request.handle().isBlank() && !request.handle().equalsIgnoreCase(user.getHandle())) {
+            String handle = request.handle().trim().toLowerCase();
+            if (!handle.matches("[a-z0-9_]{3,24}")) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Handles use 3-24 lowercase letters, numbers, or underscores.");
+            if (userRepository.existsByHandleIgnoreCase(handle)) throw new ResponseStatusException(HttpStatus.CONFLICT, "That handle is already in use.");
+            user.setHandle(handle);
+        }
+
         if (request.newPassword() != null && !request.newPassword().isBlank() && request.currentPassword() != null) {
             if (!passwordEncoder.matches(request.currentPassword(), user.getPasswordHash())) {
                 throw new InvalidCredentialsException();
@@ -132,5 +139,5 @@ public class UserService {
         return ids.stream().map(movies::get).filter(java.util.Objects::nonNull).map(Movie::fromEntity).toList();
     }
 
-    private br.ufpb.motus.model.user.AuthUserDto toDto(UserEntity user) { return new br.ufpb.motus.model.user.AuthUserDto(user.getId(), user.getEmail(), user.getName(), user.getRole(), user.getAvatarPath()); }
+    private br.ufpb.motus.model.user.AuthUserDto toDto(UserEntity user) { return new br.ufpb.motus.model.user.AuthUserDto(user.getId(), user.getEmail(), user.getName(), user.getHandle(), user.getRole(), user.getAvatarPath()); }
 }

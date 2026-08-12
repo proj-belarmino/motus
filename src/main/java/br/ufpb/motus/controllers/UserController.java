@@ -45,6 +45,7 @@ public class UserController {
 
     public record ProfileUpdateRequest(
             String name,
+            String handle,
             String email,
             String currentPassword,
             String newPassword

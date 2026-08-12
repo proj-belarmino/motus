@@ -27,6 +27,9 @@ public class UserEntity {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "handle", nullable = false, unique = true)
+    private String handle;
+
     @Column(name = "password_hash", nullable = false)
     private String passwordHash;
 

@@ -15,6 +15,10 @@ final class MovieFilter {
     @NonNull Specification<MovieEntity> filter(@NonNull SearchQuery query) {
         Specification<MovieEntity> spec = Specification.unrestricted();
 
+        if (query.title() != null && !query.title().isBlank()) {
+            spec = spec.and(byTitle(query.title()));
+        }
+
         if (query.genre() != null) {
             spec = spec.and(byGenre(query.genre()));
         }
@@ -29,6 +33,10 @@ final class MovieFilter {
         }
 
         return spec;
+    }
+
+    private @NonNull Specification<MovieEntity> byTitle(@NonNull String title) {
+        return (root, criteriaQuery, cb) -> cb.like(cb.lower(root.get("title")), "%" + title.toLowerCase() + "%");
     }
 
     private @NonNull Specification<MovieEntity> byGenre(@NonNull String genre) {

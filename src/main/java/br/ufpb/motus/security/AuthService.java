@@ -39,6 +39,7 @@ public class AuthService {
                 UUID.randomUUID().toString(),
                 request.email(),
                 fallbackName,
+                createHandle(request.email()),
                 passwordEncoder.encode(request.password()),
                 "USER", null
         );
@@ -55,8 +56,18 @@ public class AuthService {
         }
 
         String token = jwtService.generateToken(user);
-        AuthUserDto dto = new AuthUserDto(user.getId(), user.getEmail(), user.getName(), user.getRole(), user.getAvatarPath());
+        AuthUserDto dto = new AuthUserDto(user.getId(), user.getEmail(), user.getName(), user.getHandle(), user.getRole(), user.getAvatarPath());
 
         return new AuthResponse(token, dto);
+    }
+
+    private String createHandle(String email) {
+        String base = email.split("@")[0].toLowerCase().replaceAll("[^a-z0-9_]", "");
+        if (base.length() < 3) base = "user";
+        base = base.substring(0, Math.min(base.length(), 18));
+        String handle = base;
+        int suffix = 1;
+        while (userRepository.existsByHandleIgnoreCase(handle)) handle = base + suffix++;
+        return handle;
     }
 }
