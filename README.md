@@ -87,3 +87,8 @@ Instruções rápidas para inicialização local da aplicação e do banco:
   ```bash
   mvn spring-boot:run
   ```
+
+  Na pasta ./motus-web:
+  ```bash
+  npm run dev
+  ````
