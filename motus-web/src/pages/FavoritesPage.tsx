@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Heart, RefreshCw } from "lucide-react";
 import { Navbar } from "../components/Navbar";
 import { MovieCard } from "../components/MovieCard";
@@ -14,6 +15,7 @@ export default function FavoritesPage() {
     load: loadFavorites,
     remove,
   } = usePersonalCollection("favorites");
+  const navigate = useNavigate();
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
   return (
@@ -77,6 +79,7 @@ export default function FavoritesPage() {
                   movie={movie}
                   favorited
                   onClick={() => setSelectedMovie(movie)}
+                  onPlay={() => navigate(`/watch/${movie.id}`)}
                   onChanged={(kind, value) => {
                     if (kind === "favorite" && !value) remove(movie.id);
                   }}

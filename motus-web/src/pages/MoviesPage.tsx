@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Clapperboard, Film, Filter, SlidersHorizontal } from "lucide-react";
 import { useMovies } from "../hooks/useMovies";
 import { Navbar } from "../components/Navbar";
@@ -9,6 +10,7 @@ import { Movie } from "../types";
 export default function MoviesPage() {
   const { data, error, query, updateSearch, triggerScan, refresh } =
     useMovies();
+  const navigate = useNavigate();
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
   const handleSearch = useCallback(
@@ -124,6 +126,7 @@ export default function MoviesPage() {
                     <MovieCard
                       movie={movie}
                       onClick={() => setSelectedMovie(movie)}
+                      onPlay={() => navigate(`/watch/${movie.id}`)}
                     />
                   </div>
                 ))}

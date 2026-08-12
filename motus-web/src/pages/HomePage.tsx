@@ -196,6 +196,7 @@ export default function HomePage() {
                   <MovieCard
                     movie={movie}
                     onClick={() => setSelectedMovie(movie)}
+                    onPlay={() => navigate(`/watch/${movie.id}`)}
                   />
                 </div>
               ))}
@@ -237,6 +238,7 @@ export default function HomePage() {
                   <MovieCard
                     movie={movie}
                     onClick={() => setSelectedMovie(movie)}
+                    onPlay={() => navigate(`/watch/${movie.id}`)}
                   />
                 </div>
               ))}
@@ -256,6 +258,7 @@ export default function HomePage() {
                   <MovieCard
                     movie={movie}
                     onClick={() => setSelectedMovie(movie)}
+                    onPlay={() => navigate(`/watch/${movie.id}`)}
                   />
                 </div>
               ))}

@@ -262,7 +262,7 @@ function SearchResultRow({
       </span>
       {movie.rating ? (
         <span className="flex shrink-0 items-center gap-1 text-sm font-medium text-amber-300">
-          <Star className="h-3.5 w-3.5 fill-current" /> {movie.rating}
+          <Star className="h-3.5 w-3.5 fill-current" /> {movie.rating.toFixed(1)}
         </span>
       ) : null}
     </button>

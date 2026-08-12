@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Bookmark, RefreshCw } from "lucide-react";
 import { Navbar } from "../components/Navbar";
 import { MovieCard } from "../components/MovieCard";
@@ -14,6 +15,7 @@ export default function WatchlistPage() {
     load: loadWatchlist,
     remove,
   } = usePersonalCollection("watchlist");
+  const navigate = useNavigate();
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
   return (
@@ -77,6 +79,7 @@ export default function WatchlistPage() {
                   movie={movie}
                   inWatchlist
                   onClick={() => setSelectedMovie(movie)}
+                  onPlay={() => navigate(`/watch/${movie.id}`)}
                   onChanged={(kind, value) => {
                     if (kind === "watchlist" && !value) remove(movie.id);
                   }}

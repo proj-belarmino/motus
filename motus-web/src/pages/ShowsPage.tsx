@@ -248,7 +248,7 @@ function ShowCard({ show, onClick }: { show: Show; onClick: () => void }) {
           </span>
           {show.rating ? (
             <span className="flex items-center gap-1 font-medium text-amber-300">
-              <Star className="h-3 w-3 fill-current" /> {show.rating}
+              <Star className="h-3 w-3 fill-current" /> {show.rating.toFixed(1)}
             </span>
           ) : null}
         </span>

@@ -218,7 +218,7 @@ export default function ShowDetailPage() {
               <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-white/75">
                 <span className="inline-flex items-center gap-1 text-amber-300">
                   <Star className="h-3.5 w-3.5 fill-current" />{" "}
-                  {show.rating || "—"}
+                  {show.rating ? show.rating.toFixed(1) : "—"}
                 </span>
                 <span className="h-1 w-1 rounded-full bg-white/40" />
                 <span>{year}</span>
