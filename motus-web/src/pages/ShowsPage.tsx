@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { Film, Plus, RefreshCw, Star, Tv } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Film, Filter, Plus, RefreshCw, Star, Tv } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Navbar } from "../components/Navbar";
 import CreateShowModal from "../components/CreateShowModal";
@@ -15,6 +15,11 @@ export default function ShowsPage() {
   const [loading, setLoading] = useState(cache.shows === null);
   const [error, setError] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
+  const [genre, setGenre] = useState("");
+  const [sortBy, setSortBy] = useState<"title" | "releaseDate" | "rating">(
+    "title",
+  );
+  const [sortOrder, setSortOrder] = useState<"ASC" | "DESC">("ASC");
 
   const loadShows = useCallback(async () => {
     try {
@@ -35,7 +40,29 @@ export default function ShowsPage() {
     void loadShows();
   }, [loadShows]);
 
-  const totalEpisodes = shows.reduce(
+  const genreOptions = useMemo(() => {
+    const genres = new Set<string>();
+    shows.forEach((show) => show.genres.forEach((g) => genres.add(g)));
+    return Array.from(genres).sort((a, b) => a.localeCompare(b));
+  }, [shows]);
+
+  const visibleShows = useMemo(() => {
+    const filtered = genre
+      ? shows.filter((show) => show.genres.includes(genre))
+      : [...shows];
+    const direction = sortOrder === "ASC" ? 1 : -1;
+    return filtered.sort((a, b) => {
+      const comparison =
+        sortBy === "title"
+          ? a.title.localeCompare(b.title, undefined, { sensitivity: "base" })
+          : sortBy === "releaseDate"
+            ? (a.release_date ?? "").localeCompare(b.release_date ?? "")
+            : a.rating - b.rating;
+      return comparison * direction;
+    });
+  }, [shows, genre, sortBy, sortOrder]);
+
+  const visibleEpisodes = visibleShows.reduce(
     (sum, show) => sum + show.episodes.length,
     0,
   );
@@ -55,7 +82,7 @@ export default function ShowsPage() {
             </h2>
             <p className="mt-1 text-sm text-muted">
               {shows.length
-                ? `${shows.length} shows · ${totalEpisodes} episodes`
+                ? `${visibleShows.length} ${visibleShows.length === 1 ? "show" : "shows"} · ${visibleEpisodes} ${visibleEpisodes === 1 ? "episode" : "episodes"}`
                 : "Stack episodes around a single title"}
             </p>
           </div>
@@ -73,6 +100,45 @@ export default function ShowsPage() {
               <Plus className="h-4 w-4" /> Add show
             </button>
           </div>
+        </div>
+
+        <div className="mb-8 flex flex-col gap-3 rounded-2xl border border-border bg-surface/80 p-3 shadow-sm backdrop-blur-sm sm:flex-row sm:flex-wrap sm:items-center sm:gap-3 sm:p-4">
+          <div className="flex items-center gap-2 px-1 text-xs font-bold uppercase tracking-wider text-muted">
+            <Filter className="h-4 w-4" /> Filters
+          </div>
+          <select
+            className="min-w-0 flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 sm:min-w-38 sm:flex-none"
+            value={genre}
+            onChange={(event) => setGenre(event.target.value)}
+          >
+            <option value="">All genres</option>
+            {genreOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+          <select
+            className="min-w-0 flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 sm:min-w-40 sm:flex-none"
+            value={sortBy}
+            onChange={(event) =>
+              setSortBy(event.target.value as "title" | "releaseDate" | "rating")
+            }
+          >
+            <option value="title">Title</option>
+            <option value="releaseDate">Release date</option>
+            <option value="rating">Rating</option>
+          </select>
+          <select
+            className="min-w-0 flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 sm:min-w-35 sm:flex-none"
+            value={sortOrder}
+            onChange={(event) =>
+              setSortOrder(event.target.value as "ASC" | "DESC")
+            }
+          >
+            <option value="ASC">Ascending</option>
+            <option value="DESC">Descending</option>
+          </select>
         </div>
 
         {error ? (
@@ -97,9 +163,9 @@ export default function ShowsPage() {
               />
             ))}
           </div>
-        ) : shows.length ? (
+        ) : visibleShows.length ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {shows.map((show, index) => (
+            {visibleShows.map((show, index) => (
               <div
                 key={show.id}
                 className="animate-rise-in"

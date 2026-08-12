@@ -55,11 +55,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground transition-colors duration-300">
-      <Navbar
-        onSearch={() => undefined}
-        onScan={triggerScan}
-        showSearch={false}
-      />
+      <Navbar onSearch={() => undefined} onScan={triggerScan} />
 
       {heroMovie && (
         <section className="relative isolate min-h-[540px] overflow-hidden border-b border-border bg-[#101010] sm:min-h-[620px] lg:min-h-[680px]">
