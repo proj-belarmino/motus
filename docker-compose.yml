@@ -1,23 +1,57 @@
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: onerous-postgres
+    container_name: motus-postgres
     environment:
       POSTGRES_DB: onerous-db
       POSTGRES_USER: usuario-usuario
       POSTGRES_PASSWORD: amominhavida
-    ports:
-      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
+    networks:
+      - motus-network
 
-  wiremock:
-    image: wiremock/wiremock:3.3.1
-    container_name: uni-api-mock
-    ports:
-      - "8081:8080"
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: motus-backend
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/onerous-db
+      SPRING_DATASOURCE_USERNAME: usuario-usuario
+      SPRING_DATASOURCE_PASSWORD: amominhavida
     volumes:
-      - ./wiremock:/home/wiremock
+      # Bind mounts for media libraries (stored on host machine)
+      - ./media:/app/media
+      - ./shows:/app/shows
+      - ./thumbnails:/app/thumbnails
+      - ./avatars:/app/avatars
+      - ./subtitles:/app/subtitles
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    networks:
+      - motus-network
+
+  frontend:
+    build:
+      context: ./motus-web
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=https://pasteldemiolos.xyz
+    container_name: motus-frontend
+    ports:
+      - "3000:80" # Exposed to host so cloudflared can proxy it
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - motus-network
+
+networks:
+  motus-network:
+    driver: bridge
+
 volumes:
   postgres_data:
