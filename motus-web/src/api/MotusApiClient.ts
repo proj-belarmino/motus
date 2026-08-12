@@ -1,6 +1,6 @@
 import { axiosInstance, API_BASE_URL } from "./axiosInstance";
 import { ApiClient } from "./ApiClient";
-import { Movie, Page, SearchQuery } from "../types";
+import { Movie, Page, SearchQuery, Show, ShowSearchResult } from "../types";
 import { TokenService } from "../services/TokenService";
 
 export interface AuthResponse {
@@ -52,6 +52,32 @@ export class MotusApiClient implements ApiClient {
   async toggleWatchlist(movieId: string): Promise<boolean> { return (await axiosInstance.post<{ inWatchlist: boolean }>("/api/user/watchlist/toggle", { movieId })).data.inWatchlist; }
   async getWatchlist(): Promise<Movie[]> { return (await axiosInstance.get<Movie[]>("/api/user/watchlist")).data; }
   async isInWatchlist(movieId: string): Promise<boolean> { return (await axiosInstance.get<{ inWatchlist: boolean }>("/api/user/watchlist/is-on-watchlist", { params: { movieId } })).data.inWatchlist; }
+
+  async searchShows(query: string): Promise<ShowSearchResult[]> { return (await axiosInstance.get<ShowSearchResult[]>("/api/shows/search", { params: { q: query } })).data; }
+  async createShow(title: string, tmdbId?: number): Promise<Show> { return (await axiosInstance.post<Show>("/api/shows", { title, tmdbId })).data; }
+  async getShows(): Promise<Show[]> { return (await axiosInstance.get<Show[]>("/api/shows")).data; }
+  async getShow(id: string): Promise<Show> { return (await axiosInstance.get<Show>(`/api/shows/${id}`)).data; }
+  async deleteShow(id: string): Promise<void> { await axiosInstance.delete(`/api/shows/${id}`); }
+  async uploadEpisode(showId: string, file: File, season?: number, episode?: number): Promise<Show> {
+    const formData = new FormData();
+    formData.append("file", file);
+    const response = await axiosInstance.post<Show>(`/api/shows/${showId}/episodes`, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+      params: { season, episode },
+    });
+    return response.data;
+  }
+  async deleteEpisode(showId: string, episodeId: string): Promise<Show> {
+    return (await axiosInstance.delete<Show>(`/api/shows/${showId}/episodes/${episodeId}`)).data;
+  }
+  getEpisodeStreamUrl(episodeId: string): string {
+    const token = TokenService.getToken();
+    const url = new URL(`${API_BASE_URL}/api/stream/episode/${episodeId}`);
+    if (token) {
+      url.searchParams.append("token", token);
+    }
+    return url.toString();
+  }
 
   async getMovies(query: SearchQuery): Promise<Page<Movie>> {
     const response = await axiosInstance.get<Page<Movie>>("/api/movies", {

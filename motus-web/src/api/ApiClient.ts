@@ -1,4 +1,4 @@
-import { Movie, Page, SearchQuery } from "../types";
+import { Movie, Page, SearchQuery, Show, ShowSearchResult } from "../types";
 import { User } from "../services/TokenService";
 
 export interface ApiClient {
@@ -36,4 +36,12 @@ export interface ApiClient {
   toggleWatchlist(movieId: string): Promise<boolean>;
   getWatchlist(): Promise<Movie[]>;
   isInWatchlist(movieId: string): Promise<boolean>;
+  searchShows(query: string): Promise<ShowSearchResult[]>;
+  createShow(title: string, tmdbId?: number): Promise<Show>;
+  getShows(): Promise<Show[]>;
+  getShow(id: string): Promise<Show>;
+  deleteShow(id: string): Promise<void>;
+  uploadEpisode(showId: string, file: File, season?: number, episode?: number): Promise<Show>;
+  deleteEpisode(showId: string, episodeId: string): Promise<Show>;
+  getEpisodeStreamUrl(episodeId: string): string;
 }

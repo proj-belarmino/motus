@@ -42,10 +42,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isExpanded, setIsExpanded }) =
       id: "tv",
       label: "TV Shows",
       icon: Tv,
-      path: "/tv",
-      active: location.pathname === "/tv",
-      disabled: true,
-      badge: "Soon",
+      path: "/shows",
+      active: location.pathname.startsWith("/shows"),
+      disabled: false,
     },
     {
       id: "favorites",

@@ -50,6 +50,45 @@ export interface SearchQuery {
   size?: number;
 }
 
+export interface Episode {
+  id: string;
+  show_id: string;
+  season_number: number;
+  episode_number: number;
+  title?: string;
+  overview?: string;
+  release_date?: string;
+  file_path: string;
+  file_hash?: string;
+  cover_path?: string;
+  metadata: MediaMetadata;
+}
+
+export interface Show {
+  id: string;
+  title: string;
+  original_title?: string;
+  overview?: string;
+  release_date?: string;
+  genres: string[];
+  rating: number;
+  cover_path?: string;
+  status?: string;
+  number_of_seasons: number;
+  tmdb_id?: number;
+  episodes: Episode[];
+}
+
+export interface ShowSearchResult {
+  tmdbId: number;
+  title: string;
+  year?: string;
+  overview?: string;
+  posterUrl?: string;
+  rating: number;
+  genres: string[];
+}
+
 export interface ApiError extends Error {
   response?: {
     status?: number;

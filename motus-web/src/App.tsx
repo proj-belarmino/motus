@@ -17,6 +17,8 @@ const NotificationsPage = React.lazy(
 );
 const FavoritesPage = React.lazy(() => import("./pages/FavoritesPage"));
 const WatchlistPage = React.lazy(() => import("./pages/WatchlistPage"));
+const ShowsPage = React.lazy(() => import("./pages/ShowsPage"));
+const ShowDetailPage = React.lazy(() => import("./pages/ShowDetailPage"));
 
 const FullScreenLoader = () => (
   <div className="flex h-screen w-screen items-center justify-center bg-background">
@@ -40,8 +42,11 @@ export const App: React.FC = () => {
                 <Route element={<ProtectedRoute />}>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/watch/:id" element={<WatchPage />} />
+                  <Route path="/watch/episode/:id" element={<WatchPage />} />
                   <Route path="/favorites" element={<FavoritesPage />} />
                   <Route path="/watchlist" element={<WatchlistPage />} />
+                  <Route path="/shows" element={<ShowsPage />} />
+                  <Route path="/shows/:id" element={<ShowDetailPage />} />
                   <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/settings/account" element={<AccountPage />} />
                   <Route path="/settings/privacy" element={<PrivacyPage />} />

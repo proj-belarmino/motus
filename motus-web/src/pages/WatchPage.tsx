@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   Captions,
@@ -36,7 +36,9 @@ function formatTime(seconds: number) {
 export default function WatchPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const api = useApi();
+  const isEpisode = location.pathname.startsWith("/watch/episode/");
   const playerRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsTimeout = useRef<number | null>(null);
@@ -56,7 +58,9 @@ export default function WatchPage() {
   const [playbackRate, setPlaybackRate] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
 
-  const streamUrl = api.getStreamUrl(id ?? "", transcode);
+  const streamUrl = isEpisode
+    ? api.getEpisodeStreamUrl(id ?? "")
+    : api.getStreamUrl(id ?? "", transcode);
 
   const applySubtitleSelection = useCallback((video: HTMLVideoElement, subtitleId: string | null) => {
     const tracks = video.textTracks;
@@ -74,9 +78,9 @@ export default function WatchPage() {
   }, [applySubtitleSelection]);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || isEpisode) return;
     api.getMovie(id).then(setMovie).catch(() => undefined);
-  }, [id, api]);
+  }, [id, api, isEpisode]);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -176,7 +180,7 @@ export default function WatchPage() {
         crossOrigin="anonymous"
         className="h-full w-full object-contain outline-none"
         onClick={togglePlayback}
-        onPlay={() => { setIsPlaying(true); revealControls(); if (!activityRecorded.current) { activityRecorded.current = true; void api.recordActivity(id).catch(() => undefined); } }}
+        onPlay={() => { setIsPlaying(true); revealControls(); if (!activityRecorded.current && !isEpisode) { activityRecorded.current = true; void api.recordActivity(id).catch(() => undefined); } }}
         onPause={() => { setIsPlaying(false); setShowControls(true); }}
         onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
         onLoadedMetadata={(event) => {
