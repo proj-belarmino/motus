@@ -76,7 +76,7 @@ export default function RegisterPage() {
       <main className="mx-auto flex w-full max-w-[440px] flex-grow flex-col justify-center px-4 py-12">
         <div className="mb-8 text-center">
           <p className="mb-2 text-sm font-bold uppercase tracking-wider text-muted">
-            Step 1 of 3
+            Step 1 of 1
           </p>
           <h2 className="text-3xl font-extrabold text-foreground">
             Create a password to start your membership
