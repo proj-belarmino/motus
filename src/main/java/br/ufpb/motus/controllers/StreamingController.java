@@ -4,8 +4,10 @@ import br.ufpb.motus.model.exception.ResourceNotFoundException;
 import br.ufpb.motus.model.exception.StreamingOperationException;
 import br.ufpb.motus.model.movie.MovieEntity;
 import br.ufpb.motus.model.network.MediaStreamResult;
+import br.ufpb.motus.model.show.EpisodeEntity;
 import br.ufpb.motus.services.log.Logger;
 import br.ufpb.motus.services.movie.MovieRepository;
+import br.ufpb.motus.services.show.EpisodeRepository;
 import br.ufpb.motus.services.streaming.StreamingService;
 import br.ufpb.motus.services.streaming.TranscodingStreamWriter;
 import org.jetbrains.annotations.Contract;
@@ -29,10 +31,12 @@ public class StreamingController {
 
     private final StreamingService streamingService;
     private final MovieRepository movieRepository;
+    private final EpisodeRepository episodeRepository;
 
-    public StreamingController(StreamingService streamingService, MovieRepository movieRepository) {
+    public StreamingController(StreamingService streamingService, MovieRepository movieRepository, EpisodeRepository episodeRepository) {
         this.streamingService = streamingService;
         this.movieRepository = movieRepository;
+        this.episodeRepository = episodeRepository;
     }
 
     @GetMapping("/movie/{movieId}")
@@ -92,11 +96,60 @@ public class StreamingController {
         return new ResponseEntity<>(wrapPayload(result, filePath), headers, HttpStatus.OK);
     }
 
+    @GetMapping("/episode/{episodeId}")
+    public ResponseEntity<StreamingResponseBody> streamEpisode(
+            @PathVariable String episodeId,
+            @RequestHeader(value = HttpHeaders.RANGE, required = false) String rangeHeader,
+            @RequestParam(defaultValue = "false") boolean transcode) {
+
+        Path filePath = resolveEpisodePath(episodeId);
+        MediaStreamResult result;
+
+        if (transcode) {
+            result = new MediaStreamResult(
+                    -1L,
+                    "video/mp4",
+                    Optional.empty(),
+                    new TranscodingStreamWriter(filePath, "libx264", "aac", "mp4")
+            );
+        } else {
+            result = acquireStreamResult(filePath, rangeHeader);
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType(result.contentType()));
+        headers.set(HttpHeaders.ACCEPT_RANGES, "bytes");
+
+        if (result.contentLength() >= 0) {
+            headers.setContentLength(result.contentLength());
+        }
+
+        HttpStatus status = HttpStatus.OK;
+
+        if (result.range().isPresent()) {
+            status = HttpStatus.PARTIAL_CONTENT;
+            headers.set(HttpHeaders.CONTENT_RANGE, result.range().get().toHeaderValue());
+        }
+
+        return new ResponseEntity<>(wrapPayload(result, filePath), headers, status);
+    }
+
     private @NonNull Path resolveMoviePath(String movieId) {
         MovieEntity movie = movieRepository.findById(movieId)
                 .orElseThrow(() -> new ResourceNotFoundException("Movie", movieId));
 
         Path filePath = Paths.get(movie.getFilePath());
+        if (!Files.exists(filePath)) {
+            throw new ResourceNotFoundException("File", filePath.toString());
+        }
+        return filePath;
+    }
+
+    private @NonNull Path resolveEpisodePath(String episodeId) {
+        EpisodeEntity episode = episodeRepository.findById(episodeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Episode", episodeId));
+
+        Path filePath = Paths.get(episode.getFilePath());
         if (!Files.exists(filePath)) {
             throw new ResourceNotFoundException("File", filePath.toString());
         }
