@@ -1,11 +1,29 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useApi } from '../context/ApiContext';
 import { Movie, Page, SearchQuery } from '../types';
+import { ApiClient } from '../api/ApiClient';
+
+const pageCache = new Map<string, Page<Movie>>();
+
+const cacheKey = (query: SearchQuery) => JSON.stringify({ ...query });
+
+export const warmMovies = async (api: Pick<ApiClient, "getMovies">) => {
+  try {
+    const query: SearchQuery = { page: 0, size: 20 };
+    pageCache.set(cacheKey(query), await api.getMovies(query));
+  } catch {
+    // Prefetching is best-effort; pages fetch on their own if it fails.
+  }
+};
 
 export const useMovies = (initialQuery: SearchQuery = { page: 0, size: 20 }) => {
   const api = useApi();
-  const [data, setData] = useState<Page<Movie> | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [data, setData] = useState<Page<Movie> | null>(() => {
+    return pageCache.get(cacheKey(initialQuery)) ?? null;
+  });
+  const [loading, setLoading] = useState<boolean>(() => {
+    return !pageCache.has(cacheKey(initialQuery));
+  });
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState<SearchQuery>(initialQuery);
 
@@ -13,6 +31,7 @@ export const useMovies = (initialQuery: SearchQuery = { page: 0, size: 20 }) => 
     try {
       setLoading(true);
       const result = await api.getMovies(query);
+      pageCache.set(cacheKey(query), result);
       setData(result);
       setError(null);
     } catch {

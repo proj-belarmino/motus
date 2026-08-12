@@ -1,16 +1,29 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { useApi } from "../context/ApiContext";
 import { Sidebar } from "./Sidebar";
+import { warmCollection } from "../hooks/usePersonalCollection";
+import { warmMovies } from "../hooks/useMovies";
 
 export default function ProtectedRoute() {
   const { isAuthenticated } = useAuth();
+  const api = useApi();
   const location = useLocation();
 
   const [isExpanded, setIsExpanded] = useState(() => {
     const saved = localStorage.getItem("sidebar-expanded");
     return saved !== null ? JSON.parse(saved) : true;
   });
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    // Preload personal collections and the home library so switching tabs
+    // renders instantly instead of flashing loading skeletons.
+    void warmCollection("favorites", api);
+    void warmCollection("watchlist", api);
+    void warmMovies(api);
+  }, [isAuthenticated, api]);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;

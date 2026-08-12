@@ -1,35 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { Bookmark, RefreshCw } from "lucide-react";
 import { Navbar } from "../components/Navbar";
 import { MovieCard } from "../components/MovieCard";
 import MovieModal from "../components/MovieModal";
-import { useApi } from "../context/ApiContext";
+import { usePersonalCollection } from "../hooks/usePersonalCollection";
 import { Movie } from "../types";
 
 export default function WatchlistPage() {
-  const api = useApi();
-  const [movies, setMovies] = useState<Movie[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const { items: movies, loading, error, load: loadWatchlist, remove } = usePersonalCollection("watchlist");
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
-
-  const loadWatchlist = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      setMovies(await api.getWatchlist());
-    } catch {
-      setError("Your watchlist could not be loaded.");
-    } finally {
-      setLoading(false);
-    }
-  }, [api]);
-
-  useEffect(() => {
-    // This page owns the watchlist request for the logged-in user.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void loadWatchlist();
-  }, [loadWatchlist]);
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-background text-foreground transition-colors duration-300">
@@ -65,7 +44,7 @@ export default function WatchlistPage() {
           </div>
         ) : movies.length ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-            {movies.map((movie) => <MovieCard key={movie.id} movie={movie} inWatchlist onClick={() => setSelectedMovie(movie)} onChanged={(kind, value) => { if (kind === "watchlist" && !value) setMovies((current) => current.filter((item) => item.id !== movie.id)); }} />)}
+            {movies.map((movie, index) => <div key={movie.id} className="animate-rise-in" style={{ animationDelay: `${Math.min(index * 40, 400)}ms` }}><MovieCard movie={movie} inWatchlist onClick={() => setSelectedMovie(movie)} onChanged={(kind, value) => { if (kind === "watchlist" && !value) remove(movie.id); }} /></div>)}
           </div>
         ) : (
           <div className="flex h-56 flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-surface/50 text-center text-muted">
