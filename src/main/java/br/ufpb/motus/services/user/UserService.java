@@ -32,14 +32,18 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final br.ufpb.motus.services.security.JwtService jwtService;
     private final UserActivityRepository userActivityRepository;
+    private final UserFavoriteRepository userFavoriteRepository;
+    private final UserWatchlistRepository userWatchlistRepository;
     private final Path avatarsPath;
     private final MovieRepository movieRepository;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, br.ufpb.motus.services.security.JwtService jwtService, UserActivityRepository userActivityRepository, MovieRepository movieRepository, @org.springframework.beans.factory.annotation.Value("${motus.fs.avatars.path:./avatars}") String avatarsPath) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, br.ufpb.motus.services.security.JwtService jwtService, UserActivityRepository userActivityRepository, UserFavoriteRepository userFavoriteRepository, UserWatchlistRepository userWatchlistRepository, MovieRepository movieRepository, @org.springframework.beans.factory.annotation.Value("${motus.fs.avatars.path:./avatars}") String avatarsPath) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.userActivityRepository = userActivityRepository;
+        this.userFavoriteRepository = userFavoriteRepository;
+        this.userWatchlistRepository = userWatchlistRepository;
         this.avatarsPath = Path.of(avatarsPath).toAbsolutePath().normalize();
         this.movieRepository = movieRepository;
     }
@@ -137,6 +141,56 @@ public class UserService {
         List<String> ids = userActivityRepository.findRecentMovieIds(userId, 12);
         Map<String, MovieEntity> movies = movieRepository.findAllById(ids).stream().collect(java.util.stream.Collectors.toMap(MovieEntity::getId, Function.identity()));
         return ids.stream().map(movies::get).filter(java.util.Objects::nonNull).map(Movie::fromEntity).toList();
+    }
+
+    @Transactional
+    public boolean toggleFavorite(String userId, String movieId) {
+        requireMovie(movieId);
+        if (userFavoriteRepository.existsByUserIdAndMovieId(userId, movieId)) {
+            userFavoriteRepository.deleteByUserIdAndMovieId(userId, movieId);
+            return false;
+        }
+        userFavoriteRepository.save(new br.ufpb.motus.model.user.UserFavoriteEntity(userId, movieId));
+        return true;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Movie> getFavorites(String userId) {
+        List<String> ids = userFavoriteRepository.findMovieIdsByUserId(userId);
+        Map<String, MovieEntity> movies = movieRepository.findAllById(ids).stream().collect(java.util.stream.Collectors.toMap(MovieEntity::getId, Function.identity()));
+        return ids.stream().map(movies::get).filter(java.util.Objects::nonNull).map(Movie::fromEntity).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isFavorite(String userId, String movieId) {
+        return movieId != null && userFavoriteRepository.existsByUserIdAndMovieId(userId, movieId);
+    }
+
+    @Transactional
+    public boolean toggleWatchlist(String userId, String movieId) {
+        requireMovie(movieId);
+        if (userWatchlistRepository.existsByUserIdAndMovieId(userId, movieId)) {
+            userWatchlistRepository.deleteByUserIdAndMovieId(userId, movieId);
+            return false;
+        }
+        userWatchlistRepository.save(new br.ufpb.motus.model.user.UserWatchlistEntity(userId, movieId));
+        return true;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Movie> getWatchlist(String userId) {
+        List<String> ids = userWatchlistRepository.findMovieIdsByUserId(userId);
+        Map<String, MovieEntity> movies = movieRepository.findAllById(ids).stream().collect(java.util.stream.Collectors.toMap(MovieEntity::getId, Function.identity()));
+        return ids.stream().map(movies::get).filter(java.util.Objects::nonNull).map(Movie::fromEntity).toList();
+    }
+
+    @Transactional(readOnly = true)
+    public boolean isInWatchlist(String userId, String movieId) {
+        return movieId != null && userWatchlistRepository.existsByUserIdAndMovieId(userId, movieId);
+    }
+
+    private void requireMovie(String movieId) {
+        if (movieId == null || !movieRepository.existsById(movieId)) throw new ResourceNotFoundException("Movie", movieId);
     }
 
     private br.ufpb.motus.model.user.AuthUserDto toDto(UserEntity user) { return new br.ufpb.motus.model.user.AuthUserDto(user.getId(), user.getEmail(), user.getName(), user.getHandle(), user.getRole(), user.getAvatarPath()); }

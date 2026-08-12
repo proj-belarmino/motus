@@ -71,4 +71,27 @@ public class UserController {
 
     @GetMapping("/recent")
     public ResponseEntity<List<Movie>> getRecentMovies(@AuthenticationPrincipal String userId) { return ResponseEntity.ok(userService.getRecentMovies(userId)); }
+
+    public record FavoriteRequest(String movieId) {}
+    public record FavoriteResponse(boolean favorited) {}
+    public record WatchlistRequest(String movieId) {}
+    public record WatchlistResponse(boolean inWatchlist) {}
+
+    @PostMapping("/favorites/toggle")
+    public ResponseEntity<FavoriteResponse> toggleFavorite(@AuthenticationPrincipal String userId, @RequestBody FavoriteRequest request) { return ResponseEntity.ok(new FavoriteResponse(userService.toggleFavorite(userId, request.movieId()))); }
+
+    @GetMapping("/favorites")
+    public ResponseEntity<List<Movie>> getFavorites(@AuthenticationPrincipal String userId) { return ResponseEntity.ok(userService.getFavorites(userId)); }
+
+    @GetMapping("/favorites/is-favorite")
+    public ResponseEntity<FavoriteResponse> isFavorite(@AuthenticationPrincipal String userId, @RequestParam String movieId) { return ResponseEntity.ok(new FavoriteResponse(userService.isFavorite(userId, movieId))); }
+
+    @PostMapping("/watchlist/toggle")
+    public ResponseEntity<WatchlistResponse> toggleWatchlist(@AuthenticationPrincipal String userId, @RequestBody WatchlistRequest request) { return ResponseEntity.ok(new WatchlistResponse(userService.toggleWatchlist(userId, request.movieId()))); }
+
+    @GetMapping("/watchlist")
+    public ResponseEntity<List<Movie>> getWatchlist(@AuthenticationPrincipal String userId) { return ResponseEntity.ok(userService.getWatchlist(userId)); }
+
+    @GetMapping("/watchlist/is-on-watchlist")
+    public ResponseEntity<WatchlistResponse> isOnWatchlist(@AuthenticationPrincipal String userId, @RequestParam String movieId) { return ResponseEntity.ok(new WatchlistResponse(userService.isInWatchlist(userId, movieId))); }
 }
