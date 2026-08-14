@@ -17,6 +17,8 @@ import { useTheme } from "../context/ThemeContext";
 import { useAuth } from "../context/AuthContext";
 import { useApi } from "../context/ApiContext";
 import { TokenService } from "../services/TokenService";
+import AvatarCropModal from "../components/AvatarCropModal";
+import { readFileAsDataUrl } from "../utils/imageCrop";
 
 type ActivityDay = { date: string; count: number };
 type HeatmapDay = { key: string; count: number };
@@ -93,6 +95,7 @@ export default function SettingsPage() {
   const [activity, setActivity] = useState<ActivityDay[]>([]);
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
+  const [cropImageSrc, setCropImageSrc] = useState<string | null>(null);
   useEffect(() => {
     void api
       .getActivity()
@@ -100,7 +103,7 @@ export default function SettingsPage() {
       .catch(() => setActivity([]));
   }, [api]);
   const avatarUrl = user?.avatarPath ? api.getAvatarUrl(user.avatarPath) : null;
-  const uploadAvatar = async (file?: File) => {
+  const handleFileSelected = async (file?: File) => {
     if (!file) return;
     if (
       !file.type.match(/^image\/(jpeg|png|webp)$/) ||
@@ -109,6 +112,16 @@ export default function SettingsPage() {
       setMessage("Use a JPEG, PNG, or WebP image smaller than 5 MB.");
       return;
     }
+    setMessage("");
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+      setCropImageSrc(dataUrl);
+    } catch {
+      setMessage("Could not read the selected image.");
+    }
+  };
+  const uploadCroppedAvatar = async (file: File) => {
+    setCropImageSrc(null);
     try {
       setUploading(true);
       setMessage("");
@@ -196,7 +209,7 @@ export default function SettingsPage() {
               accept="image/jpeg,image/png,image/webp"
               className="hidden"
               onChange={(event) => {
-                void uploadAvatar(event.target.files?.[0]);
+                void handleFileSelected(event.target.files?.[0]);
                 event.currentTarget.value = "";
               }}
             />
@@ -207,6 +220,13 @@ export default function SettingsPage() {
             )}
           </div>
         </section>
+        {cropImageSrc && (
+          <AvatarCropModal
+            imageSrc={cropImageSrc}
+            onCancel={() => setCropImageSrc(null)}
+            onConfirm={(file) => void uploadCroppedAvatar(file)}
+          />
+        )}
         <ActivityHeatmap activity={activity} />
         <section className="overflow-hidden rounded-2xl border border-border bg-surface shadow-sm">
           <div className="flex items-center justify-between px-4 py-4 sm:px-6">

@@ -1,5 +1,6 @@
 package br.ufpb.motus.model.movie;
 
+import br.ufpb.motus.model.fs.FilePathSanitizer;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.jetbrains.annotations.Contract;
@@ -31,19 +32,29 @@ public record Movie(
 
     @Contract("_ -> new")
     public static @NonNull Movie fromEntity(@NonNull MovieEntity entity) {
+        List<Subtitle> subtitles = entity.getSubtitles() != null
+                ? entity.getSubtitles().stream()
+                        .map(subtitle -> new Subtitle(
+                                subtitle.id(),
+                                subtitle.language(),
+                                subtitle.label(),
+                                FilePathSanitizer.toDisplayPath(subtitle.filePath())))
+                        .toList()
+                : new ArrayList<>();
+
         return new Movie(
                 entity.getId(),
                 entity.getTitle(),
                 entity.getOriginalTitle(),
-                entity.getFilePath(),
+                FilePathSanitizer.toDisplayPath(entity.getFilePath()),
                 entity.getReleaseDate(),
                 entity.getDirector(),
                 entity.getGenres(),
                 entity.getRating(),
-                entity.getCoverPath(),
+                FilePathSanitizer.toDisplayPath(entity.getCoverPath()),
                 entity.getFileHash(),
                 entity.getMetadata(),
-                entity.getSubtitles() != null ? entity.getSubtitles() : new ArrayList<>(),
+                subtitles,
                 entity.getAddedAt()
         );
     }

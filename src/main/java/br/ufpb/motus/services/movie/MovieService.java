@@ -379,6 +379,23 @@ public class MovieService {
         return Movie.fromEntity(entity);
     }
 
+    /**
+     * Resolves the physical path of a subtitle directly from the persisted movie
+     * entity, so the (display-only) DTO never carries server filesystem paths.
+     */
+    @Transactional(readOnly = true)
+    public @NonNull Path resolveSubtitleFilePath(@NonNull String movieId, @NonNull String subtitleId) {
+        MovieEntity entity = repository.findById(movieId)
+                .orElseThrow(() -> new ResourceNotFoundException("Movie", movieId));
+
+        Subtitle subtitle = entity.getSubtitles().stream()
+                .filter(candidate -> candidate.id().equals(subtitleId))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("Subtitle", subtitleId));
+
+        return Paths.get(subtitle.filePath());
+    }
+
     private static final Map<String, String> LANGUAGE_CODES = Map.ofEntries(
             Map.entry("en", "English"),
             Map.entry("pt", "Portuguese"),

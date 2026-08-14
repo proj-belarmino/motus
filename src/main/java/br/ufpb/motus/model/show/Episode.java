@@ -1,5 +1,6 @@
 package br.ufpb.motus.model.show;
 
+import br.ufpb.motus.model.fs.FilePathSanitizer;
 import br.ufpb.motus.model.movie.MediaMetadata;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -35,9 +36,9 @@ public record Episode(
                 entity.getTitle(),
                 entity.getOverview(),
                 entity.getReleaseDate(),
-                entity.getFilePath(),
+                FilePathSanitizer.toDisplayPath(entity.getFilePath()),
                 entity.getFileHash(),
-                entity.getCoverPath(),
+                FilePathSanitizer.toDisplayPath(entity.getCoverPath()),
                 entity.getMetadata()
         );
     }

@@ -42,6 +42,10 @@ public class MediaProbeService {
 
     public Path generateThumbnail(Path videoPath, Path outputDir, String timestampString) {
         String filename = videoPath.getFileName().toString() + "_thumb.jpg";
+        return generateThumbnail(videoPath, outputDir, timestampString, filename);
+    }
+
+    public Path generateThumbnail(Path videoPath, Path outputDir, String timestampString, String filename) {
         Path outputPath = outputDir.resolve(filename);
 
         try {

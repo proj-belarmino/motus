@@ -4,3 +4,4 @@ mvnw.cmd
 target/
 thumbnails/
 media/
+.env

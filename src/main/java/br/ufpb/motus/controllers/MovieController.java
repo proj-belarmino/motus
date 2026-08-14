@@ -1,9 +1,7 @@
 package br.ufpb.motus.controllers;
 
-import br.ufpb.motus.model.exception.ResourceNotFoundException;
 import br.ufpb.motus.model.exception.StreamingOperationException;
 import br.ufpb.motus.model.movie.Movie;
-import br.ufpb.motus.model.movie.Subtitle;
 import br.ufpb.motus.model.query.SearchQuery;
 import br.ufpb.motus.services.movie.MovieService;
 import org.springframework.data.domain.Page;
@@ -23,7 +21,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 
 @RestController
 @RequestMapping("/api/movies")
@@ -118,14 +115,8 @@ public class MovieController {
 
     @GetMapping("/{id}/subtitles/{subtitleId}/file")
     public ResponseEntity<byte[]> getSubtitleFile(@PathVariable String id, @PathVariable String subtitleId) {
-        Movie movie = movieService.getMovie(id);
-        Subtitle subtitle = movie.subtitles().stream()
-                .filter(candidate -> candidate.id().equals(subtitleId))
-                .findFirst()
-                .orElseThrow(() -> new ResourceNotFoundException("Subtitle", subtitleId));
-
         try {
-            byte[] content = Files.readAllBytes(Paths.get(subtitle.filePath()));
+            byte[] content = Files.readAllBytes(movieService.resolveSubtitleFilePath(id, subtitleId));
             return ResponseEntity.ok()
                     .contentType(MediaType.parseMediaType("text/vtt; charset=utf-8"))
                     .contentLength(content.length)

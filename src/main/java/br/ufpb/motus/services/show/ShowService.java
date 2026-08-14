@@ -190,9 +190,12 @@ public class ShowService {
                 thumbTimestamp = 1;
             }
 
-            Path thumbnailDir = Paths.get(thumbnailsPath).resolve(showId).toAbsolutePath().normalize();
+            Path thumbnailDir = Paths.get(thumbnailsPath).toAbsolutePath().normalize();
             Files.createDirectories(thumbnailDir);
-            Path thumbnailPath = probeService.generateThumbnail(targetPath, thumbnailDir, String.valueOf(thumbTimestamp));
+            // Keep show thumbnails flat in the thumbnails root with a unique name so
+            // the client can address them by file name without leaking server paths.
+            String thumbnailName = showId + "_" + originalFilename + "_thumb.jpg";
+            Path thumbnailPath = probeService.generateThumbnail(targetPath, thumbnailDir, String.valueOf(thumbTimestamp), thumbnailName);
 
             EpisodeEntity entity = episodeRepository
                     .findByShowIdAndSeasonNumberAndEpisodeNumber(showId, seasonNumber, episodeNumber)
