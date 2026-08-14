@@ -6,7 +6,7 @@ RUN npm install
 COPY . .
 
 # Set VITE_API_URL so the frontend knows where to make requests
-ARG VITE_API_URL=https://pasteldemiolos.xyz
+ARG VITE_API_URL=""
 ENV VITE_API_URL=$VITE_API_URL
 
 RUN npm run build

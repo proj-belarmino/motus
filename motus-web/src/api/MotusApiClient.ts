@@ -162,7 +162,10 @@ export class MotusApiClient implements ApiClient {
   }
   getEpisodeStreamUrl(episodeId: string): string {
     const token = TokenService.getToken();
-    const url = new URL(`${API_BASE_URL}/api/stream/episode/${episodeId}`);
+    const url = new URL(
+      `${API_BASE_URL}/api/stream/episode/${episodeId}`,
+      window.location.origin,
+    );
     if (token) {
       url.searchParams.append("token", token);
     }
@@ -232,6 +235,7 @@ export class MotusApiClient implements ApiClient {
     const token = TokenService.getToken();
     const url = new URL(
       `${API_BASE_URL}/api/movies/${movieId}/subtitles/${subtitleId}/file`,
+      window.location.origin,
     );
     if (token) {
       url.searchParams.append("token", token);
@@ -272,7 +276,10 @@ export class MotusApiClient implements ApiClient {
 
   getStreamUrl(movieId: string, transcode: boolean = false): string {
     const token = TokenService.getToken();
-    const url = new URL(`${API_BASE_URL}/api/stream/movie/${movieId}`);
+    const url = new URL(
+      `${API_BASE_URL}/api/stream/movie/${movieId}`,
+      window.location.origin,
+    );
 
     if (token) {
       url.searchParams.append("token", token);
