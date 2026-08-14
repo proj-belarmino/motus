@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useApi } from "../../context/ApiContext";
-import { validateEmail, sanitizeInput } from "../../utils/validators";
+import { validateEmail } from "../../utils/validators";
 import { Input } from "../../components/ui/Input";
 import { ApiError } from "../../types";
 
@@ -39,8 +39,8 @@ export default function LoginPage() {
     try {
       setLoading(true);
       const { token, user } = await api.login({
-        email: sanitizeInput(email),
-        password: sanitizeInput(password),
+        email,
+        password,
       });
 
       setAuthSession(token, user);

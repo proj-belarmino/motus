@@ -51,16 +51,3 @@ export const validatePassword = (
     errors,
   };
 };
-
-/**
- * Strips dangerous HTML injection vectors but PRESERVES user formatting.
- * Spaces are allowed here generally, but our specific validators above will reject them for auth.
- */
-export const sanitizeInput = (input: string): string => {
-  if (!input) return "";
-  return input
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#x27;");
-};

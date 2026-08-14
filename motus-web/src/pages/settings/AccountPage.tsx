@@ -7,7 +7,6 @@ import { Input } from "../../components/ui/Input";
 import {
   validateEmail,
   validatePassword,
-  sanitizeInput,
 } from "../../utils/validators";
 import { TokenService } from "../../services/TokenService";
 import { ApiError } from "../../types";
@@ -57,13 +56,13 @@ export default function AccountPage() {
         currentPassword?: string;
         newPassword?: string;
       } = {
-        name: sanitizeInput(name),
-        email: sanitizeInput(email),
+        name,
+        email,
       };
 
       if (newPassword) {
-        payload.currentPassword = sanitizeInput(currentPassword);
-        payload.newPassword = sanitizeInput(newPassword);
+        payload.currentPassword = currentPassword;
+        payload.newPassword = newPassword;
       }
 
       const response = await api.updateProfile(payload);

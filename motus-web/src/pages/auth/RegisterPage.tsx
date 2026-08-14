@@ -4,7 +4,6 @@ import { useApi } from "../../context/ApiContext";
 import {
   validateEmail,
   validatePassword,
-  sanitizeInput,
 } from "../../utils/validators";
 import { Input } from "../../components/ui/Input";
 import { Check, X } from "lucide-react";
@@ -41,8 +40,8 @@ export default function RegisterPage() {
     try {
       setLoading(true);
       await api.register({
-        email: sanitizeInput(email),
-        password: sanitizeInput(password),
+        email,
+        password,
       });
       navigate("/login");
     } catch (error) {
