@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+/* Drive the `dark:` variant from the .dark class, not the OS preference,
+   so it stays in sync with the app's theme toggle (ThemeContext). */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Base CSS Variables for Light Mode */
 :root {
     color-scheme: light;

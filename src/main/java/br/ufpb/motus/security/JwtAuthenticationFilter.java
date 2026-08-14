@@ -62,8 +62,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return header.substring(7);
         }
 
-        // Browsers loading a direct <video src="..."> lack header control.
-        // We permit supplying it as a URI parameter strictly.
-        return request.getParameter("token");
+        // Browsers loading a direct <video src="..."> or <track> lack header control.
+        // We permit supplying it as a URI parameter strictly, and only for the
+        // media endpoints that actually need it, to avoid leaking the token into
+        // URLs (logs, history, Referer headers) of other API calls.
+        if (isMediaUrlRequest(request)) {
+            return request.getParameter("token");
+        }
+
+        return null;
+    }
+
+    private boolean isMediaUrlRequest(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        if (uri == null) {
+            return false;
+        }
+        return uri.startsWith("/api/stream/")
+                || uri.matches("^/api/movies/[^/]+/subtitles/[^/]+/file$");
     }
 }

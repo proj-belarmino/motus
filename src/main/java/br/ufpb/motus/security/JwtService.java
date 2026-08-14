@@ -19,6 +19,12 @@ public class JwtService {
     public JwtService(
             @Value("${motus.security.jwt.secret}") String secret,
             @Value("${motus.security.jwt.expiration-hours:168}") long expirationHours) {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException("JWT signing secret is not configured. Set the JWT_SECRET environment variable (openssl rand -hex 32).");
+        }
+        if (secret.length() < 32) {
+            throw new IllegalStateException("JWT signing secret must be at least 32 characters long.");
+        }
         this.algorithm = Algorithm.HMAC256(secret);
         this.expirationHours = expirationHours;
     }

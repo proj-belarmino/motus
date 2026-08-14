@@ -234,17 +234,18 @@ public class MovieService {
         }
 
         try {
-            String originalFilename = file.getOriginalFilename();
-            if (originalFilename == null || originalFilename.isBlank()) {
-                originalFilename = "uploaded_media_" + System.currentTimeMillis();
-            }
+            String originalFilename = sanitizeFilename(file.getOriginalFilename());
 
-            Path targetDirectory = Paths.get(libraryPath);
+            Path targetDirectory = Paths.get(libraryPath).toAbsolutePath().normalize();
             if (!Files.exists(targetDirectory)) {
                 Files.createDirectories(targetDirectory);
             }
 
-            Path targetPath = targetDirectory.resolve(originalFilename);
+            Path targetPath = targetDirectory.resolve(originalFilename).normalize();
+
+            if (!targetPath.startsWith(targetDirectory)) {
+                throw new IllegalArgumentException("Filename escapes the library directory.");
+            }
 
             Files.copy(file.getInputStream(), targetPath, StandardCopyOption.REPLACE_EXISTING);
 
@@ -253,6 +254,23 @@ public class MovieService {
             Logger.error("Failed to save uploaded media file", error);
             throw new RuntimeException("Failed to upload file.", error);
         }
+    }
+
+    /**
+     * reduces an upload-supplied filename to a bare, safe file name that cannot
+     * escape the library directory via path traversal (".." or absolute paths).
+     */
+    private @NonNull String sanitizeFilename(String filename) {
+        if (filename == null || filename.isBlank()) {
+            return "uploaded_media_" + System.currentTimeMillis();
+        }
+
+        String name = Paths.get(filename).getFileName().toString();
+        name = name.replaceAll("[\\\\/]", "_").trim();
+        if (name.isBlank() || ".".equals(name) || "..".equals(name)) {
+            name = "uploaded_media_" + System.currentTimeMillis();
+        }
+        return name;
     }
 
     private void deletePhysicalFileSafely(String absolutePath) {

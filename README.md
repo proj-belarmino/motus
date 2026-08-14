@@ -57,7 +57,16 @@ mkdir -p media shows thumbnails avatars subtitles
 sudo chmod -R 777 media shows thumbnails avatars subtitles
 ```
 
-### 2. Hostear a Aplicação com Docker
+### 2. Configurar os segredos
+Copie o exemplo de ambiente e preencha com valores reais (o `docker compose up`
+falha de propósito sem eles, para não subir com credenciais padrão conhecidas):
+```bash
+cp .env.example .env
+# edite o .env: POSTGRES_PASSWORD e JWT_SECRET são obrigatórios.
+# JWT_SECRET: gere com `openssl rand -hex 32`
+```
+
+### 3. Hostear a Aplicação com Docker
 Construa e inicie os containers da aplicação:
 ```bash
 docker compose up -d --build
@@ -83,6 +92,7 @@ Caso queira executar os serviços manualmente durante o desenvolvimento:
 
 * **Iniciar o Backend (Spring Boot):**
   ```bash
+  export JWT_SECRET="$(openssl rand -hex 32)"
   mvn spring-boot:run
   ```
 

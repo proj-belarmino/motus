@@ -57,7 +57,11 @@ public class MovieController {
             }
         }
 
-        SearchQuery query = new SearchQuery(title, genre, year, director, minRating, sortBy, sortOrder, page, size, since);
+        // Bound pagination to prevent oversized-page memory exhaustion.
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.min(Math.max(size, 1), 100);
+
+        SearchQuery query = new SearchQuery(title, genre, year, director, minRating, sortBy, sortOrder, safePage, safeSize, since);
         Page<Movie> results = movieService.searchMovies(query);
 
         return ResponseEntity.ok(results);

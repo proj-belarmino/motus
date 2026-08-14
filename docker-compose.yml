@@ -3,9 +3,9 @@ services:
     image: postgres:16-alpine
     container_name: motus-postgres
     environment:
-      POSTGRES_DB: onerous-db
-      POSTGRES_USER: usuario-usuario
-      POSTGRES_PASSWORD: amominhavida
+      POSTGRES_DB: ${POSTGRES_DB:-motus}
+      POSTGRES_USER: ${POSTGRES_USER:-motus}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the .env file}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
@@ -18,9 +18,10 @@ services:
       dockerfile: Dockerfile
     container_name: motus-backend
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/onerous-db
-      SPRING_DATASOURCE_USERNAME: usuario-usuario
-      SPRING_DATASOURCE_PASSWORD: amominhavida
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-motus}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER:-motus}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in the .env file}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in the .env file}
     volumes:
       - motus_media:/app/media
       - motus_shows:/app/shows
@@ -38,7 +39,7 @@ services:
       context: ./motus-web
       dockerfile: Dockerfile
       args:
-        - VITE_API_URL=https://pasteldemiolos.xyz
+        - VITE_API_URL=${VITE_API_URL:-https://pasteldemiolos.xyz}
     container_name: motus-frontend
     ports:
       - "3000:80" 

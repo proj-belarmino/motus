@@ -130,6 +130,7 @@ public class UserService {
         if (file.isEmpty() || file.getSize() > 5 * 1024 * 1024 || file.getContentType() == null || !file.getContentType().startsWith("image/")) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Choose an image smaller than 5 MB.");
         String extension = switch (file.getContentType()) { case "image/jpeg" -> "jpg"; case "image/png" -> "png"; case "image/webp" -> "webp"; default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Use a JPEG, PNG, or WebP image."); };
         try {
+            validateImageMagicBytes(file.getInputStream(), extension);
             Files.createDirectories(avatarsPath);
             if (user.getAvatarPath() != null) Files.deleteIfExists(avatarsPath.resolve(user.getAvatarPath()).normalize());
             String filename = userId + "." + extension;
@@ -138,6 +139,25 @@ public class UserService {
             userRepository.save(user);
         } catch (IOException exception) { throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not save profile picture.", exception); }
         return new br.ufpb.motus.model.user.AuthResponse(jwtService.generateToken(user), toDto(user));
+    }
+
+    /**
+     * Confirms the declared image type matches the actual file signature, so a
+     * non-image (or polyglot) payload cannot be stored and later served inline.
+     */
+    private void validateImageMagicBytes(java.io.InputStream input, String extension) throws IOException {
+        byte[] header = input.readNBytes(12);
+        boolean valid = switch (extension) {
+            case "jpg" -> header.length >= 3 && (header[0] & 0xFF) == 0xFF && (header[1] & 0xFF) == 0xD8 && (header[2] & 0xFF) == 0xFF;
+            case "png" -> header.length >= 8
+                    && (header[0] & 0xFF) == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47
+                    && header[4] == 0x0D && header[5] == 0x0A && header[6] == 0x1A && header[7] == 0x0A;
+            case "webp" -> header.length >= 12
+                    && header[0] == 0x52 && header[1] == 0x49 && header[2] == 0x46 && header[3] == 0x46
+                    && header[8] == 0x57 && header[9] == 0x45 && header[10] == 0x42 && header[11] == 0x50;
+            default -> false;
+        };
+        if (!valid) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "File content does not match its declared image type.");
     }
 
     @Transactional
