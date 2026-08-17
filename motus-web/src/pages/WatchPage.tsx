@@ -211,7 +211,7 @@ export default function WatchPage() {
         key={streamUrl}
         src={streamUrl}
         autoPlay
-        crossOrigin="anonymous"
+        crossOrigin="use-credentials"
         className="h-full w-full object-contain outline-none"
         onClick={togglePlayback}
         onPlay={() => {

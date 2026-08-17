@@ -9,7 +9,6 @@ import {
   Show,
   ShowSearchResult,
 } from "../types";
-import { TokenService } from "../services/TokenService";
 
 export interface AuthResponse {
   token: string;
@@ -23,6 +22,10 @@ export class MotusApiClient implements ApiClient {
       credentials,
     );
     return response.data;
+  }
+
+  async logout(): Promise<void> {
+    await axiosInstance.post("/api/auth/logout");
   }
 
   async register(data: Record<string, string>): Promise<void> {
@@ -161,14 +164,10 @@ export class MotusApiClient implements ApiClient {
     ).data;
   }
   getEpisodeStreamUrl(episodeId: string): string {
-    const token = TokenService.getToken();
     const url = new URL(
       `${API_BASE_URL}/api/stream/episode/${episodeId}`,
       window.location.origin,
     );
-    if (token) {
-      url.searchParams.append("token", token);
-    }
     return url.toString();
   }
 
@@ -232,14 +231,10 @@ export class MotusApiClient implements ApiClient {
   }
 
   getSubtitleUrl(movieId: string, subtitleId: string): string {
-    const token = TokenService.getToken();
     const url = new URL(
       `${API_BASE_URL}/api/movies/${movieId}/subtitles/${subtitleId}/file`,
       window.location.origin,
     );
-    if (token) {
-      url.searchParams.append("token", token);
-    }
     return url.toString();
   }
 
@@ -275,15 +270,11 @@ export class MotusApiClient implements ApiClient {
   }
 
   getStreamUrl(movieId: string, transcode: boolean = false): string {
-    const token = TokenService.getToken();
     const url = new URL(
       `${API_BASE_URL}/api/stream/movie/${movieId}`,
       window.location.origin,
     );
 
-    if (token) {
-      url.searchParams.append("token", token);
-    }
     if (transcode) {
       url.searchParams.append("transcode", "true");
     }

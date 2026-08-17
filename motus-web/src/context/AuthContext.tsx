@@ -31,6 +31,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const logout = () => {
+    void axiosInstance.post("/api/auth/logout").catch(() => undefined);
     TokenService.clearAuth();
     setUser(null);
     navigate("/login");

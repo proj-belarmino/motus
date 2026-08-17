@@ -5,6 +5,7 @@ export interface ApiClient {
   login(
     credentials: Record<string, string>,
   ): Promise<{ token: string; user: User }>;
+  logout(): Promise<void>;
   register(data: Record<string, string>): Promise<void>;
   getMovies(query: SearchQuery): Promise<Page<Movie>>;
   getMovie(id: string): Promise<Movie>;

@@ -2,7 +2,10 @@ package br.ufpb.motus.controllers;
 
 import br.ufpb.motus.model.user.ChangeEmailRequest;
 import br.ufpb.motus.model.user.ChangePasswordRequest;
+import br.ufpb.motus.security.MediaAuthCookieService;
 import br.ufpb.motus.services.user.UserService;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -22,9 +25,11 @@ import br.ufpb.motus.model.movie.Movie;
 public class UserController {
 
     private final UserService userService;
+    private final MediaAuthCookieService mediaAuthCookieService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, MediaAuthCookieService mediaAuthCookieService) {
         this.userService = userService;
+        this.mediaAuthCookieService = mediaAuthCookieService;
     }
 
     @PutMapping("/password")
@@ -54,12 +59,24 @@ public class UserController {
     @PutMapping("/profile")
     public ResponseEntity<br.ufpb.motus.model.user.AuthResponse> updateProfile(
             @AuthenticationPrincipal String userId,
-            @RequestBody ProfileUpdateRequest request) {
-        return ResponseEntity.ok(userService.updateProfile(userId, request));
+            @RequestBody ProfileUpdateRequest request,
+            HttpServletRequest httpRequest) {
+        br.ufpb.motus.model.user.AuthResponse response = userService.updateProfile(userId, request);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, mediaAuthCookieService.buildCookie(response.token(), httpRequest.isSecure()))
+                .body(response);
     }
 
     @PostMapping("/avatar")
-    public ResponseEntity<br.ufpb.motus.model.user.AuthResponse> updateAvatar(@AuthenticationPrincipal String userId, @RequestParam("file") MultipartFile file) { return ResponseEntity.ok(userService.updateAvatar(userId, file)); }
+    public ResponseEntity<br.ufpb.motus.model.user.AuthResponse> updateAvatar(
+            @AuthenticationPrincipal String userId,
+            @RequestParam("file") MultipartFile file,
+            HttpServletRequest httpRequest) {
+        br.ufpb.motus.model.user.AuthResponse response = userService.updateAvatar(userId, file);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, mediaAuthCookieService.buildCookie(response.token(), httpRequest.isSecure()))
+                .body(response);
+    }
 
     public record ActivityRequest(String movieId) {}
 
