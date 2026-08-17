@@ -4,6 +4,7 @@ import br.ufpb.motus.services.security.JwtService;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.NonNull;
@@ -20,6 +21,7 @@ import java.util.List;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+    private static final String MEDIA_AUTH_COOKIE = "motus_media_token";
     private final JwtService jwtService;
 
     public JwtAuthenticationFilter(JwtService jwtService) {
@@ -62,14 +64,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return header.substring(7);
         }
 
-        // Browsers loading a direct <video src="..."> or <track> lack header control.
-        // We permit supplying it as a URI parameter strictly, and only for the
-        // media endpoints that actually need it, to avoid leaking the token into
-        // URLs (logs, history, Referer headers) of other API calls.
         if (isMediaUrlRequest(request)) {
-            return request.getParameter("token");
+            return extractMediaCookie(request);
         }
 
+        return null;
+    }
+
+    private String extractMediaCookie(HttpServletRequest request) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies == null) {
+            return null;
+        }
+        for (Cookie cookie : cookies) {
+            if (MEDIA_AUTH_COOKIE.equals(cookie.getName()) && cookie.getValue() != null && !cookie.getValue().isBlank()) {
+                return cookie.getValue();
+            }
+        }
         return null;
     }
 

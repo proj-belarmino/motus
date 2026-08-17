@@ -132,13 +132,27 @@ public class UserService {
         try {
             validateImageMagicBytes(file.getInputStream(), extension);
             Files.createDirectories(avatarsPath);
-            if (user.getAvatarPath() != null) Files.deleteIfExists(avatarsPath.resolve(user.getAvatarPath()).normalize());
+            if (user.getAvatarPath() != null) {
+                Files.deleteIfExists(resolveAvatarPath(user.getAvatarPath()));
+            }
             String filename = userId + "." + extension;
-            Files.copy(file.getInputStream(), avatarsPath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(file.getInputStream(), resolveAvatarPath(filename), StandardCopyOption.REPLACE_EXISTING);
             user.setAvatarPath(filename);
             userRepository.save(user);
         } catch (IOException exception) { throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not save profile picture.", exception); }
         return new br.ufpb.motus.model.user.AuthResponse(jwtService.generateToken(user), toDto(user));
+    }
+
+    private Path resolveAvatarPath(String filename) {
+        String safeFilename = Path.of(filename).getFileName().toString();
+        if (!safeFilename.equals(filename)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid avatar filename.");
+        }
+        Path resolved = avatarsPath.resolve(safeFilename).normalize();
+        if (!resolved.startsWith(avatarsPath)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid avatar filename.");
+        }
+        return resolved;
     }
 
     /**
